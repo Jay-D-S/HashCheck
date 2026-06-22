@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HashCheck.Views.ValidatePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:HashCheck.ViewModels"
+    xmlns:conv="using:HashCheck.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+    </Page.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Validate Media"
+                   Style="{ThemeResource TitleTextBlockStyle}" Margin="0,0,0,16"/>
+
+        <!-- Step: Pick file -->
+        <StackPanel Grid.Row="1" Spacing="12"
+                    Visibility="{x:Bind ViewModel.IsPickFileStep, Mode=OneWay,
+                                 Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Text="Select a .hash file to validate:"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="HashFilePathBox" Grid.Column="0" IsReadOnly="True"
+                         PlaceholderText="No file selected..."/>
+                <Button Grid.Column="1" Content="Browse" Click="BrowseHash_Click" Margin="8,0,0,0"/>
+            </Grid>
+            <Button Content="Validate" Click="StartValidate_Click"
+                    Style="{ThemeResource AccentButtonStyle}"
+                    IsEnabled="{x:Bind ViewModel.HasHashFilePath, Mode=OneWay}"/>
+        </StackPanel>
+
+        <!-- Step: Insert Media -->
+        <StackPanel Grid.Row="1" Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Visibility="{x:Bind ViewModel.IsInsertMediaStep, Mode=OneWay,
+                                 Converter={StaticResource BoolToVisibility}}">
+            <FontIcon Glyph="&#xE8F4;" FontSize="48"/>
+            <TextBlock Text="{x:Bind ViewModel.InsertMediaMessage, Mode=OneWay}"
+                       HorizontalAlignment="Center" TextAlignment="Center"
+                       Style="{ThemeResource SubtitleTextBlockStyle}"/>
+            <ProgressRing IsActive="{x:Bind ViewModel.IsPolling, Mode=OneWay}"
+                          HorizontalAlignment="Center"/>
+            <TextBlock Text="Or select the drive manually:" HorizontalAlignment="Center"/>
+            <ComboBox x:Name="ManualDrivePicker" MinWidth="200" HorizontalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                <Button Content="Use Selected Drive" Click="UseManualDrive_Click"/>
+                <Button Content="Cancel" Click="CancelInsertMedia_Click"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Step: Validating — one card per volume -->
+        <Grid Grid.Row="1"
+              Visibility="{x:Bind ViewModel.IsValidatingStep, Mode=OneWay,
+                           Converter={StaticResource BoolToVisibility}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="{x:Bind ViewModel.MediaName, Mode=OneWay}"
+                       Style="{ThemeResource SubtitleTextBlockStyle}"
+                       Margin="0,0,0,12"/>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Rows}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ValidationRow">
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1" CornerRadius="4"
+                                    Padding="16,12" Margin="0,0,0,8">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Header row: label + status badge + buttons -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{x:Bind Label}"
+                                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind SerialNumber}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       FontSize="11" VerticalAlignment="Center"/>
+                                            <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                                    CornerRadius="2" Padding="6,2">
+                                                <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                           FontSize="11"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                            <Button Content="Pause"
+                                                    Tag="{x:Bind}"
+                                                    Click="Pause_Click"
+                                                    Visibility="{x:Bind CanPause, Mode=OneWay,
+                                                                 Converter={StaticResource BoolToVisibility}}"/>
+                                            <Button Content="Resume"
+                                                    Tag="{x:Bind}"
+                                                    Click="Resume_Click"
+                                                    Visibility="{x:Bind CanResume, Mode=OneWay,
+                                                                 Converter={StaticResource BoolToVisibility}}"/>
+                                            <Button Content="Cancel"
+                                                    Tag="{x:Bind}"
+                                                    Click="CancelRow_Click"
+                                                    Visibility="{x:Bind IsActive, Mode=OneWay,
+                                                                 Converter={StaticResource BoolToVisibility}}"/>
+                                            <Button Content="View Report"
+                                                    Tag="{x:Bind}"
+                                                    Click="ViewReport_Click"
+                                                    Style="{ThemeResource AccentButtonStyle}"
+                                                    Visibility="{x:Bind HasReport, Mode=OneWay,
+                                                                 Converter={StaticResource BoolToVisibility}}"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Scan root -->
+                                    <TextBlock Grid.Row="1"
+                                               Text="{x:Bind ScanRoot}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               FontSize="11" Margin="0,0,0,8"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <!-- Progress bar (active only) -->
+                                    <ProgressBar Grid.Row="2"
+                                                 Value="{x:Bind ProgressPercent, Mode=OneWay}"
+                                                 Maximum="100"
+                                                 Visibility="{x:Bind IsActive, Mode=OneWay,
+                                                              Converter={StaticResource BoolToVisibility}}"
+                                                 Margin="0,0,0,4"/>
+
+                                    <!-- Files / ETA -->
+                                    <TextBlock Grid.Row="3"
+                                               Text="{x:Bind ProgressText, Mode=OneWay}"
+                                               Visibility="{x:Bind IsActive, Mode=OneWay,
+                                                            Converter={StaticResource BoolToVisibility}}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               FontSize="12" Margin="0,0,0,4"/>
+
+                                    <!-- Current file -->
+                                    <TextBlock Grid.Row="4"
+                                               Text="{x:Bind CurrentFile, Mode=OneWay}"
+                                               Visibility="{x:Bind IsActive, Mode=OneWay,
+                                                            Converter={StaticResource BoolToVisibility}}"
+                                               FontSize="11"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <!-- Error message (failed state) -->
+                                    <TextBlock Grid.Row="4"
+                                               Text="{x:Bind ErrorMessage, Mode=OneWay}"
+                                               Visibility="{x:Bind HasErrorMessage, Mode=OneWay,
+                                                            Converter={StaticResource BoolToVisibility}}"
+                                               Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                               FontSize="12" TextWrapping="Wrap"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Bottom bar -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+                <Button Content="Back to Dashboard" Click="BackToDashboard_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

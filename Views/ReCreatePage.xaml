@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HashCheck.Views.ReCreatePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Re-create Hash Set"
+                   Style="{ThemeResource TitleTextBlockStyle}" Margin="0,0,0,16"/>
+
+        <!-- Insert Media step -->
+        <StackPanel Grid.Row="1" x:Name="InsertMediaPanel" Spacing="16"
+                    VerticalAlignment="Center" HorizontalAlignment="Center">
+            <FontIcon Glyph="&#xE8F4;" FontSize="48"/>
+            <TextBlock x:Name="InsertMediaText" HorizontalAlignment="Center"
+                       TextAlignment="Center" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+            <ProgressRing x:Name="PollingRing" HorizontalAlignment="Center"/>
+            <TextBlock Text="Or select the drive manually:" HorizontalAlignment="Center"/>
+            <ComboBox x:Name="DrivePicker" MinWidth="200" HorizontalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                <Button Content="Use Selected Drive" Click="UseManualDrive_Click"/>
+                <Button Content="Cancel" Click="Cancel_Click"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Progress step -->
+        <StackPanel Grid.Row="1" x:Name="ProgressPanel" Spacing="12" Visibility="Collapsed">
+            <TextBlock Text="Re-creating hash set..." FontSize="18"/>
+            <ProgressBar x:Name="FilesBar"/>
+            <TextBlock x:Name="FilesText"/>
+            <ProgressBar x:Name="BytesBar"/>
+            <TextBlock x:Name="BytesText"/>
+            <TextBlock x:Name="CurrentFileText" TextTrimming="CharacterEllipsis"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock x:Name="EtaText" VerticalAlignment="Center"/>
+                <Button x:Name="CancelBtn" Content="Cancel" Click="CancelOperation_Click"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Done step -->
+        <StackPanel Grid.Row="1" x:Name="DonePanel" Spacing="16"
+                    VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Visibility="Collapsed">
+            <FontIcon x:Name="ResultIcon" FontSize="48"/>
+            <TextBlock x:Name="ResultText" HorizontalAlignment="Center" TextAlignment="Center"
+                       Style="{ThemeResource SubtitleTextBlockStyle}"/>
+            <Button Content="Go to Dashboard" Click="GoToDashboard_Click"
+                    HorizontalAlignment="Center" Style="{ThemeResource AccentButtonStyle}"/>
+        </StackPanel>
+    </Grid>
+</Page>
