@@ -138,7 +138,7 @@ public static class HashFileReader
         switch (key)
         {
             case "Description": data.Description = val; break;
-            case "MediaName":   data.MediaName   = val; break;
+            case "MediaName": data.MediaName = val; break;
             case "Algorithm":
                 if (Enum.TryParse<HashAlgorithmType>(val, out var algo)) data.Algorithm = algo;
                 break;

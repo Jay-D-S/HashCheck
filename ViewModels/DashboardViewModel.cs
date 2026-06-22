@@ -12,17 +12,17 @@ public partial class DashboardItem : ObservableObject
     public HashFileData HashFile { get; }
     public int OnlineCount { get; }
 
-    public string MediaName     => HashFile.MediaName;
-    public string Description   => HashFile.Description;
-    public int    FileCount     => HashFile.Files.Count;
-    public string TotalBytes    => FormatBytes(HashFile.Files.Sum(f => f.SizeBytes));
-    public string DateCreated   => HashFile.DateCreated.ToLocalTime().ToString("yyyy-MM-dd");
+    public string MediaName => HashFile.MediaName;
+    public string Description => HashFile.Description;
+    public int FileCount => HashFile.Files.Count;
+    public string TotalBytes => FormatBytes(HashFile.Files.Sum(f => f.SizeBytes));
+    public string DateCreated => HashFile.DateCreated.ToLocalTime().ToString("yyyy-MM-dd");
     public string LastValidated => HashFile.LastValidated?.ToLocalTime().ToString("yyyy-MM-dd") ?? "Never";
-    public string Status        => HashFile.StatusText;
-    public string NextDue       => HashFile.DueDate.ToLocalTime().ToString("yyyy-MM-dd");
-    public string FilePath      => HashFile.FilePath;
+    public string Status => HashFile.StatusText;
+    public string NextDue => HashFile.DueDate.ToLocalTime().ToString("yyyy-MM-dd");
+    public string FilePath => HashFile.FilePath;
 
-    public int  VolumeCount       => HashFile.Volumes.Count;
+    public int VolumeCount => HashFile.Volumes.Count;
     public bool IsAnyVolumeOnline => OnlineCount > 0;
     public string AvailabilityText => VolumeCount == 0 ? "—"
         : VolumeCount == 1
@@ -31,7 +31,7 @@ public partial class DashboardItem : ObservableObject
 
     public DashboardItem(HashFileData hashFile, IReadOnlySet<string> onlineSerials)
     {
-        HashFile    = hashFile;
+        HashFile = hashFile;
         OnlineCount = hashFile.Volumes.Count(v => onlineSerials.Contains(v.SerialNumber));
     }
 

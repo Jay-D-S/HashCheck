@@ -32,10 +32,10 @@ public static class VolumeLocator
             {
                 label = drive.DriveType switch
                 {
-                    DriveType.Fixed    => "Local Disk",
+                    DriveType.Fixed => "Local Disk",
                     DriveType.Removable => "Removable Drive",
-                    DriveType.Network  => "Network Drive",
-                    _                  => "Local Disk"
+                    DriveType.Network => "Network Drive",
+                    _ => "Local Disk"
                 };
             }
             return new VolumeIdentity(

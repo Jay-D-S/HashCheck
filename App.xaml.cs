@@ -66,10 +66,10 @@ public partial class App : Application
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(MainWindow);
             _tray = new TrayIconHost(hwnd);
             _tray.ShowDashboardRequested += () => ShowAndNavigate("dashboard");
-            _tray.CreateHashRequested    += () => ShowAndNavigate("create");
-            _tray.SettingsRequested      += () => ShowAndNavigate("settings");
-            _tray.AboutRequested         += () => MainWindow.DispatcherQueue.TryEnqueue(async () => await ShowAboutDialogAsync());
-            _tray.ExitRequested          += () => { _tray?.Dispose(); Current.Exit(); };
+            _tray.CreateHashRequested += () => ShowAndNavigate("create");
+            _tray.SettingsRequested += () => ShowAndNavigate("settings");
+            _tray.AboutRequested += () => MainWindow.DispatcherQueue.TryEnqueue(async () => await ShowAboutDialogAsync());
+            _tray.ExitRequested += () => { _tray?.Dispose(); Current.Exit(); };
         }
         catch (Exception ex)
         {
@@ -77,7 +77,7 @@ public partial class App : Application
         }
 
         AppServices.Scheduler.RemindersAvailable += OnRemindersAvailable;
-        AppServices.Scheduler.VolumeAttached     += OnVolumeAttached;
+        AppServices.Scheduler.VolumeAttached += OnVolumeAttached;
         AppServices.Scheduler.Start();
 
         if (MainWindow is MainWindow mw)
@@ -177,9 +177,9 @@ public partial class App : Application
                         }
                     },
                     PrimaryButtonText = "Schedule",
-                    CloseButtonText   = "Skip",
-                    XamlRoot          = xamlRoot,
-                    DefaultButton     = ContentDialogButton.Primary
+                    CloseButtonText = "Skip",
+                    XamlRoot = xamlRoot,
+                    DefaultButton = ContentDialogButton.Primary
                 };
 
                 var result = await dlg.ShowAsync();
@@ -303,10 +303,10 @@ public partial class App : Application
                     }
                 }
             },
-            PrimaryButtonText  = "Donate ❤️",
-            CloseButtonText    = "Close",
-            XamlRoot           = xamlRoot,
-            DefaultButton      = ContentDialogButton.Close
+            PrimaryButtonText = "Donate ❤️",
+            CloseButtonText = "Close",
+            XamlRoot = xamlRoot,
+            DefaultButton = ContentDialogButton.Close
         };
 
         var result = await dlg.ShowAsync();
@@ -314,7 +314,8 @@ public partial class App : Application
         if (result == ContentDialogResult.Primary)
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
-                "https://www.paypal.me/jasondsutton") { UseShellExecute = true });
+                "https://www.paypal.me/jasondsutton")
+            { UseShellExecute = true });
 
             // Suppress the nag — we trust the user clicked because they donated
             AppServices.Settings.Current.HideDonationNag = true;
@@ -330,7 +331,7 @@ public partial class App : Application
         try
         {
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-            var id   = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
+            var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
             return Microsoft.UI.Windowing.AppWindow.GetFromWindowId(id);
         }
         catch { return null; }

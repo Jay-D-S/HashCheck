@@ -218,7 +218,7 @@ public sealed class HashSetService
 
         // Expand the provided drive root with the primary volume's scan sub-path so
         // re-create scans the same subfolder as the original baseline.
-        var primaryVol   = existing.Volumes.FirstOrDefault();
+        var primaryVol = existing.Volumes.FirstOrDefault();
         var scanMediaRoot = primaryVol != null ? primaryVol.GetFullScanPath(mediaRoot) : mediaRoot;
 
         var options = new CreateOptions(
@@ -385,7 +385,7 @@ public sealed class HashSetService
         var volumeRoot = Path.GetPathRoot(mediaRoot);
         if (string.IsNullOrEmpty(volumeRoot)) return @"\";
         var root = volumeRoot.TrimEnd('\\');
-        var sub  = mediaRoot.StartsWith(root, StringComparison.OrdinalIgnoreCase)
+        var sub = mediaRoot.StartsWith(root, StringComparison.OrdinalIgnoreCase)
             ? mediaRoot.Substring(root.Length).TrimEnd('\\')
             : "";
         return string.IsNullOrEmpty(sub) ? @"\" : sub;

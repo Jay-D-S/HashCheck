@@ -8,8 +8,8 @@ public sealed class VolumeAttachedEventArgs(
     string serial, string label, string rootPath,
     IReadOnlyList<HashFileData> hashSets)
 {
-    public string Serial   { get; } = serial;
-    public string Label    { get; } = label;
+    public string Serial { get; } = serial;
+    public string Label { get; } = label;
     public string RootPath { get; } = rootPath;
     public IReadOnlyList<HashFileData> HashSets { get; } = hashSets;
 }

@@ -13,16 +13,16 @@ public enum ValidationRowStatus { Queued, Running, Paused, Done, Failed, Cancell
 public sealed partial class ValidationRow : ObservableObject
 {
     public string SerialNumber { get; }
-    public string Label        { get; }
-    public string ScanRoot     { get; }
+    public string Label { get; }
+    public string ScanRoot { get; }
 
     [ObservableProperty] private ValidationRowStatus _status = ValidationRowStatus.Queued;
-    [ObservableProperty] private int    _filesProcessed;
-    [ObservableProperty] private int    _filesTotal;
-    [ObservableProperty] private long   _bytesProcessed;
-    [ObservableProperty] private long   _bytesTotal;
-    [ObservableProperty] private string _currentFile  = "";
-    [ObservableProperty] private string _etaText      = "";
+    [ObservableProperty] private int _filesProcessed;
+    [ObservableProperty] private int _filesTotal;
+    [ObservableProperty] private long _bytesProcessed;
+    [ObservableProperty] private long _bytesTotal;
+    [ObservableProperty] private string _currentFile = "";
+    [ObservableProperty] private string _etaText = "";
     [ObservableProperty] private string _errorMessage = "";
     [ObservableProperty] private Core.Validation.ValidationReport? _report;
 
@@ -52,13 +52,13 @@ public sealed partial class ValidationRow : ObservableObject
     partial void OnBytesTotalChanged(long value) =>
         OnPropertyChanged(nameof(ProgressPercent));
 
-    public bool   HasReport       => Report != null;
-    public bool   HasErrorMessage => !string.IsNullOrEmpty(ErrorMessage);
-    public string ProgressText    =>
+    public bool HasReport => Report != null;
+    public bool HasErrorMessage => !string.IsNullOrEmpty(ErrorMessage);
+    public string ProgressText =>
         FilesTotal > 0 ? $"{FilesProcessed} / {FilesTotal} files  {EtaText}" : EtaText;
-    public bool   CanPause       => Status == ValidationRowStatus.Running;
-    public bool   CanResume      => Status == ValidationRowStatus.Paused;
-    public bool   IsActive       => Status is ValidationRowStatus.Queued
+    public bool CanPause => Status == ValidationRowStatus.Running;
+    public bool CanResume => Status == ValidationRowStatus.Paused;
+    public bool IsActive => Status is ValidationRowStatus.Queued
                                            or ValidationRowStatus.Running
                                            or ValidationRowStatus.Paused;
     public double ProgressPercent => BytesTotal > 0
@@ -66,17 +66,17 @@ public sealed partial class ValidationRow : ObservableObject
 
     public string StatusText => Status switch
     {
-        ValidationRowStatus.Queued    => "Queued",
-        ValidationRowStatus.Running   => "Running",
-        ValidationRowStatus.Paused    => "Paused",
-        ValidationRowStatus.Done      => "Done",
-        ValidationRowStatus.Failed    => "Failed",
+        ValidationRowStatus.Queued => "Queued",
+        ValidationRowStatus.Running => "Running",
+        ValidationRowStatus.Paused => "Paused",
+        ValidationRowStatus.Done => "Done",
+        ValidationRowStatus.Failed => "Failed",
         ValidationRowStatus.Cancelled => "Cancelled",
-        _                             => ""
+        _ => ""
     };
 
-    internal PauseToken               PauseToken { get; } = new();
-    internal CancellationTokenSource  Cts        { get; } = new();
+    internal PauseToken PauseToken { get; } = new();
+    internal CancellationTokenSource Cts { get; } = new();
 
     public void Pause()
     {
@@ -95,8 +95,8 @@ public sealed partial class ValidationRow : ObservableObject
     public ValidationRow(string serialNumber, string label, string scanRoot)
     {
         SerialNumber = serialNumber;
-        Label        = label;
-        ScanRoot     = scanRoot;
+        Label = label;
+        ScanRoot = scanRoot;
     }
 }
 
@@ -105,7 +105,7 @@ public enum ValidateStep { PickFile, InsertMedia, Validating }
 public partial class ValidateViewModel : ViewModelBase
 {
     private readonly HashSetService _service;
-    private readonly AppSettings    _settings;
+    private readonly AppSettings _settings;
     private Core.HashFile.HashFileData? _hashFile;
     private CancellationTokenSource? _pollCts;
     private List<string> _pollSerials = new();
@@ -125,10 +125,10 @@ public partial class ValidateViewModel : ViewModelBase
         }
     }
 
-    public bool IsPickFileStep    => CurrentStep == ValidateStep.PickFile;
+    public bool IsPickFileStep => CurrentStep == ValidateStep.PickFile;
     public bool IsInsertMediaStep => CurrentStep == ValidateStep.InsertMedia;
-    public bool IsValidatingStep  => CurrentStep == ValidateStep.Validating;
-    public bool HasHashFilePath   => !string.IsNullOrEmpty(HashFilePath);
+    public bool IsValidatingStep => CurrentStep == ValidateStep.Validating;
+    public bool HasHashFilePath => !string.IsNullOrEmpty(HashFilePath);
 
     private string _hashFilePath = "";
     public string HashFilePath
@@ -137,28 +137,28 @@ public partial class ValidateViewModel : ViewModelBase
         set { if (SetProperty(ref _hashFilePath, value)) OnPropertyChanged(nameof(HasHashFilePath)); }
     }
 
-    [ObservableProperty] private string _mediaName          = "";
+    [ObservableProperty] private string _mediaName = "";
     [ObservableProperty] private string _insertMediaMessage = "";
-    [ObservableProperty] private bool   _isPolling;
-    [ObservableProperty] private bool   _isRunning;
-    [ObservableProperty] private bool   _allDone;
+    [ObservableProperty] private bool _isPolling;
+    [ObservableProperty] private bool _isRunning;
+    [ObservableProperty] private bool _allDone;
 
     public ObservableCollection<ValidationRow> Rows { get; } = new();
 
     public ValidateViewModel(HashSetService service, AppSettings settings)
     {
-        _service  = service;
+        _service = service;
         _settings = settings;
     }
 
     public async Task StartWithFileAsync(string hashFilePath)
     {
         HashFilePath = hashFilePath;
-        _hashFile    = await Core.HashFile.HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: false);
-        MediaName    = _hashFile.MediaName;
+        _hashFile = await Core.HashFile.HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: false);
+        MediaName = _hashFile.MediaName;
 
         Rows.Clear();
-        AllDone  = false;
+        AllDone = false;
         IsRunning = false;
 
         var onlineMap = VolumeLocator.GetAllVolumes()
@@ -188,9 +188,9 @@ public partial class ValidateViewModel : ViewModelBase
     private void StartPolling(List<string> serials)
     {
         _pollSerials = serials;
-        IsPolling    = true;
-        _pollCts     = new CancellationTokenSource();
-        _            = PollForMediaAsync(_pollCts.Token);
+        IsPolling = true;
+        _pollCts = new CancellationTokenSource();
+        _ = PollForMediaAsync(_pollCts.Token);
     }
 
     private async Task PollForMediaAsync(CancellationToken ct)
@@ -213,7 +213,7 @@ public partial class ValidateViewModel : ViewModelBase
     public void CancelInsertMedia()
     {
         _pollCts?.Cancel();
-        IsPolling   = false;
+        IsPolling = false;
         CurrentStep = ValidateStep.PickFile;
     }
 
@@ -224,13 +224,13 @@ public partial class ValidateViewModel : ViewModelBase
         if (_hashFile == null) { CurrentStep = ValidateStep.PickFile; return; }
 
         var volId = VolumeLocator.GetVolumeIdentity(driveLetter);
-        if (volId == null)  { CurrentStep = ValidateStep.PickFile; return; }
+        if (volId == null) { CurrentStep = ValidateStep.PickFile; return; }
 
         Rows.Clear();
-        var entry    = _hashFile.Volumes.FirstOrDefault(v =>
+        var entry = _hashFile.Volumes.FirstOrDefault(v =>
             string.Equals(v.SerialNumber, volId.SerialNumber, StringComparison.OrdinalIgnoreCase));
         var scanRoot = entry != null ? entry.GetFullScanPath(driveLetter) : driveLetter;
-        var serial   = entry?.SerialNumber ?? volId.SerialNumber;
+        var serial = entry?.SerialNumber ?? volId.SerialNumber;
         Rows.Add(new ValidationRow(serial, volId.Label, scanRoot));
 
         CurrentStep = ValidateStep.Validating;
@@ -240,7 +240,7 @@ public partial class ValidateViewModel : ViewModelBase
     private async Task RunValidationsAsync()
     {
         IsRunning = true;
-        AllDone   = false;
+        AllDone = false;
 
         if (_settings.RunValidationsConcurrently && Rows.Count > 1)
             await Task.WhenAll(Rows.Select(ValidateRowAsync));
@@ -249,7 +249,7 @@ public partial class ValidateViewModel : ViewModelBase
                 await ValidateRowAsync(row);
 
         IsRunning = false;
-        AllDone   = true;
+        AllDone = true;
     }
 
     private async Task ValidateRowAsync(ValidationRow row)
@@ -259,11 +259,11 @@ public partial class ValidateViewModel : ViewModelBase
         var progress = new Progress<ScanProgress>(p =>
         {
             row.FilesProcessed = p.FilesProcessed;
-            row.FilesTotal     = p.FilesTotal;
+            row.FilesTotal = p.FilesTotal;
             row.BytesProcessed = p.BytesProcessed;
-            row.BytesTotal     = p.BytesTotal;
-            row.CurrentFile    = p.CurrentFile;
-            row.EtaText        = p.Eta.HasValue ? $"ETA: {p.Eta.Value:mm\\:ss}" : "Calculating...";
+            row.BytesTotal = p.BytesTotal;
+            row.CurrentFile = p.CurrentFile;
+            row.EtaText = p.Eta.HasValue ? $"ETA: {p.Eta.Value:mm\\:ss}" : "Calculating...";
         });
 
         try
@@ -281,7 +281,7 @@ public partial class ValidateViewModel : ViewModelBase
         catch (Exception ex)
         {
             row.ErrorMessage = ex.Message;
-            row.Status       = ValidationRowStatus.Failed;
+            row.Status = ValidationRowStatus.Failed;
         }
     }
 }

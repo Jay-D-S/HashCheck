@@ -42,7 +42,7 @@ public sealed class InverseBoolToVisibilityConverter : IValueConverter
 
 public sealed class BoolToOnlineBrushConverter : IValueConverter
 {
-    private static readonly SolidColorBrush OnlineBrush  = new(Windows.UI.Color.FromArgb(255,  45, 184,  77));
+    private static readonly SolidColorBrush OnlineBrush = new(Windows.UI.Color.FromArgb(255, 45, 184, 77));
     private static readonly SolidColorBrush OfflineBrush = new(Windows.UI.Color.FromArgb(255, 140, 140, 140));
 
     public object Convert(object value, Type targetType, object parameter, string language) =>

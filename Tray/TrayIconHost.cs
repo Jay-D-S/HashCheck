@@ -15,15 +15,15 @@ public sealed class TrayIconHost : IDisposable
     private const uint NIF_TIP = 0x04;
     private const uint NOTIFYICON_VERSION_4 = 4;
     private const int IDM_DASHBOARD = 1001;
-    private const int IDM_CREATE    = 1002;
-    private const int IDM_SETTINGS  = 1004;
-    private const int IDM_EXIT      = 1005;
-    private const int IDM_ABOUT     = 1006;
+    private const int IDM_CREATE = 1002;
+    private const int IDM_SETTINGS = 1004;
+    private const int IDM_EXIT = 1005;
+    private const int IDM_ABOUT = 1006;
     private const uint WM_RBUTTONUP = 0x0205;
     private const uint WM_LBUTTONDBLCLK = 0x0203;
     private const uint WM_LBUTTONUP = 0x0202;
     private const uint WM_CONTEXTMENU = 0x007B;
-    private const uint TPM_RETURNCMD  = 0x0100;
+    private const uint TPM_RETURNCMD = 0x0100;
     private const uint TPM_RIGHTBUTTON = 0x0002;
     private const uint MF_STRING = 0x0;
     private const uint MF_SEPARATOR = 0x0800;
@@ -88,10 +88,10 @@ public sealed class TrayIconHost : IDisposable
     [DllImport("user32.dll")]
     private static extern nint LoadIcon(nint hInstance, nint lpIconName);
 
-    private const uint  IMAGE_ICON      = 1;
-    private const uint  LR_LOADFROMFILE = 0x0010;
-    private const uint  LR_DEFAULTSIZE  = 0x0040;
-    private const nint  IDI_APPLICATION = 32512;
+    private const uint IMAGE_ICON = 1;
+    private const uint LR_LOADFROMFILE = 0x0010;
+    private const uint LR_DEFAULTSIZE = 0x0040;
+    private const nint IDI_APPLICATION = 32512;
 
     [DllImport("user32.dll")]
     private static extern nint CreatePopupMenu();
@@ -179,13 +179,13 @@ public sealed class TrayIconHost : IDisposable
         GetCursorPos(out var pt);
 
         var menu = CreatePopupMenu();
-        AppendMenuW(menu, MF_STRING,    IDM_DASHBOARD, "Dashboard");
-        AppendMenuW(menu, MF_STRING,    IDM_CREATE,    "Create new hash…");
-        AppendMenuW(menu, MF_SEPARATOR, 0,             null);
-        AppendMenuW(menu, MF_STRING,    IDM_SETTINGS,  "Settings");
-        AppendMenuW(menu, MF_STRING,    IDM_ABOUT,     "About / Donate…");
-        AppendMenuW(menu, MF_SEPARATOR, 0,             null);
-        AppendMenuW(menu, MF_STRING,    IDM_EXIT,      "Exit");
+        AppendMenuW(menu, MF_STRING, IDM_DASHBOARD, "Dashboard");
+        AppendMenuW(menu, MF_STRING, IDM_CREATE, "Create new hash…");
+        AppendMenuW(menu, MF_SEPARATOR, 0, null);
+        AppendMenuW(menu, MF_STRING, IDM_SETTINGS, "Settings");
+        AppendMenuW(menu, MF_STRING, IDM_ABOUT, "About / Donate…");
+        AppendMenuW(menu, MF_SEPARATOR, 0, null);
+        AppendMenuW(menu, MF_STRING, IDM_EXIT, "Exit");
 
         // TPM_RETURNCMD: TrackPopupMenu returns the selected item ID directly
         // instead of posting WM_COMMAND — handle it here rather than in SubclassProc.
@@ -200,10 +200,10 @@ public sealed class TrayIconHost : IDisposable
         switch (id)
         {
             case IDM_DASHBOARD: ShowDashboardRequested?.Invoke(); break;
-            case IDM_CREATE:    CreateHashRequested?.Invoke();    break;
-            case IDM_SETTINGS:  SettingsRequested?.Invoke();      break;
-            case IDM_ABOUT:     AboutRequested?.Invoke();         break;
-            case IDM_EXIT:      ExitRequested?.Invoke();          break;
+            case IDM_CREATE: CreateHashRequested?.Invoke(); break;
+            case IDM_SETTINGS: SettingsRequested?.Invoke(); break;
+            case IDM_ABOUT: AboutRequested?.Invoke(); break;
+            case IDM_EXIT: ExitRequested?.Invoke(); break;
         }
     }
 

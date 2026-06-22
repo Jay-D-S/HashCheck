@@ -61,7 +61,7 @@ public partial class CreateHashViewModel : ViewModelBase
     [ObservableProperty] private string _currentFile = "";
 
     partial void OnFilesProcessedChanged(int value) => OnPropertyChanged(nameof(ProgressFilesText));
-    partial void OnFilesTotalChanged(int value)     => OnPropertyChanged(nameof(ProgressFilesText));
+    partial void OnFilesTotalChanged(int value) => OnPropertyChanged(nameof(ProgressFilesText));
     partial void OnBytesProcessedChanged(long value)
     {
         OnPropertyChanged(nameof(ProgressBytesText));

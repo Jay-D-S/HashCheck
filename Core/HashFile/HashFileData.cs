@@ -6,7 +6,7 @@ public record VolumeEntry(string SerialNumber, string Label, long TotalBytes, Da
     public string GetFullScanPath(string volumeRootPath)
     {
         var root = volumeRootPath.TrimEnd('\\');
-        var sub  = ScanSubPath.TrimStart('\\');
+        var sub = ScanSubPath.TrimStart('\\');
         return string.IsNullOrEmpty(sub) ? volumeRootPath : root + '\\' + sub;
     }
 }
@@ -29,9 +29,9 @@ public class HashFileData
     public List<VolumeEntry> Volumes { get; set; } = new();
 
     // Convenience: primary (first) volume — used by code that predates groups
-    public string SerialNumber  => Volumes.Count > 0 ? Volumes[0].SerialNumber : "";
-    public string VolumeLabel   => Volumes.Count > 0 ? Volumes[0].Label        : "";
-    public long MediaTotalBytes => Volumes.Count > 0 ? Volumes[0].TotalBytes   : 0;
+    public string SerialNumber => Volumes.Count > 0 ? Volumes[0].SerialNumber : "";
+    public string VolumeLabel => Volumes.Count > 0 ? Volumes[0].Label : "";
+    public long MediaTotalBytes => Volumes.Count > 0 ? Volumes[0].TotalBytes : 0;
 
     // [FILTERS]
     public List<string> Filters { get; set; } = new();

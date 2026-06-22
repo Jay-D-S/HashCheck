@@ -85,7 +85,7 @@ public sealed partial class DashboardPage : Page
         }
         if (picked == null) return;
 
-        var fullPath  = picked.Path;
+        var fullPath = picked.Path;
         var driveRoot = Path.GetPathRoot(fullPath);
         if (string.IsNullOrEmpty(driveRoot))
         {
@@ -113,8 +113,8 @@ public sealed partial class DashboardPage : Page
         // Step 2: confirm with an editable path box
         var pathBox = new TextBox
         {
-            Text            = fullPath,
-            MinWidth        = 380,
+            Text = fullPath,
+            MinWidth = 380,
             PlaceholderText = @"e.g. D:\Photos\2026"
         };
 
@@ -142,9 +142,9 @@ public sealed partial class DashboardPage : Page
                 }
             },
             PrimaryButtonText = "Register",
-            CloseButtonText   = "Cancel",
-            XamlRoot          = XamlRoot,
-            DefaultButton     = ContentDialogButton.Primary
+            CloseButtonText = "Cancel",
+            XamlRoot = XamlRoot,
+            DefaultButton = ContentDialogButton.Primary
         };
 
         if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
@@ -169,7 +169,10 @@ public sealed partial class DashboardPage : Page
     {
         var dlg = new ContentDialog
         {
-            Title = title, Content = message, CloseButtonText = "OK", XamlRoot = XamlRoot
+            Title = title,
+            Content = message,
+            CloseButtonText = "OK",
+            XamlRoot = XamlRoot
         };
         await dlg.ShowAsync();
     }

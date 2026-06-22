@@ -9,32 +9,32 @@ namespace HashCheck.ViewModels;
 public partial class VolumeRow : ObservableObject
 {
     public string SerialNumber { get; }
-    public string Label        { get; }
-    public string ScanSubPath  { get; }
-    public bool   IsOnline     { get; }
-    public string MountPoint   { get; }
+    public string Label { get; }
+    public string ScanSubPath { get; }
+    public bool IsOnline { get; }
+    public string MountPoint { get; }
     public string FullScanPath { get; }
-    public string ScanScope    { get; }
+    public string ScanScope { get; }
 
     [ObservableProperty] private string _lastVerified = "Never";
-    [ObservableProperty] private string _status       = "Never verified";
+    [ObservableProperty] private string _status = "Never verified";
 
     public VolumeRow(VolumeEntry entry, VolumeIdentity? onlineVol, ValidationEntry? lastVal,
         IReadOnlyList<string> topLevelPaths)
     {
         SerialNumber = entry.SerialNumber;
-        Label        = entry.Label;
-        ScanSubPath  = entry.ScanSubPath;
-        IsOnline     = onlineVol != null;
+        Label = entry.Label;
+        ScanSubPath = entry.ScanSubPath;
+        IsOnline = onlineVol != null;
 
         if (onlineVol != null)
         {
-            MountPoint   = onlineVol.RootPath.TrimEnd('\\');
+            MountPoint = onlineVol.RootPath.TrimEnd('\\');
             FullScanPath = entry.GetFullScanPath(onlineVol.RootPath);
         }
         else
         {
-            MountPoint   = "—";
+            MountPoint = "—";
             FullScanPath = "—";
         }
 
@@ -56,7 +56,7 @@ public partial class VolumeRow : ObservableObject
         if (lastVal != null)
         {
             LastVerified = lastVal.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
-            Status       = lastVal.Status;
+            Status = lastVal.Status;
         }
     }
 }
@@ -67,15 +67,15 @@ public partial class MediaGroupViewModel : ViewModelBase
 
     public string HashFilePath { get; private set; } = "";
 
-    [ObservableProperty] private string     _mediaName   = "";
-    [ObservableProperty] private string     _description = "";
+    [ObservableProperty] private string _mediaName = "";
+    [ObservableProperty] private string _description = "";
     [ObservableProperty] private VolumeRow? _selectedRow;
 
     partial void OnSelectedRowChanged(VolumeRow? oldValue, VolumeRow? newValue) =>
         OnPropertyChanged(nameof(HasSelectedRow));
 
-    public bool HasSelectedRow    => SelectedRow != null;
-    public bool AnyOnline         => Volumes.Any(v => v.IsOnline);
+    public bool HasSelectedRow => SelectedRow != null;
+    public bool AnyOnline => Volumes.Any(v => v.IsOnline);
 
     public ObservableCollection<VolumeRow> Volumes { get; } = new();
 
@@ -85,8 +85,8 @@ public partial class MediaGroupViewModel : ViewModelBase
     {
         HashFilePath = hashFilePath;
         var hashFile = await HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: false);
-        MediaName    = hashFile.MediaName;
-        Description  = hashFile.Description;
+        MediaName = hashFile.MediaName;
+        Description = hashFile.Description;
 
         var onlineMap = VolumeLocator.GetAllVolumes()
             .ToDictionary(v => v.SerialNumber, StringComparer.OrdinalIgnoreCase);

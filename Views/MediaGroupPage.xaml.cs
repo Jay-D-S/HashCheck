@@ -46,21 +46,21 @@ public sealed partial class MediaGroupPage : Page
         }
         if (picked == null) return;
 
-        var fullPath    = picked.Path;
-        var driveRoot   = Path.GetPathRoot(fullPath) ?? @"\";
+        var fullPath = picked.Path;
+        var driveRoot = Path.GetPathRoot(fullPath) ?? @"\";
         var scanSubPath = ComputeSubPath(fullPath, driveRoot);
 
         var dlg = new ContentDialog
         {
-            Title             = $"Update Scan Root — {row.Label}",
-            Content           = $"New scan root:\n{fullPath}\n\n" +
+            Title = $"Update Scan Root — {row.Label}",
+            Content = $"New scan root:\n{fullPath}\n\n" +
                                 "This should be the exact folder on this drive that contains " +
                                 "the mirrored data — the same folder you would select if creating " +
                                 "a fresh hash set on this drive.",
             PrimaryButtonText = "Update",
-            CloseButtonText   = "Cancel",
-            XamlRoot          = XamlRoot,
-            DefaultButton     = ContentDialogButton.Primary
+            CloseButtonText = "Cancel",
+            XamlRoot = XamlRoot,
+            DefaultButton = ContentDialogButton.Primary
         };
         if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
 
@@ -83,7 +83,10 @@ public sealed partial class MediaGroupPage : Page
     {
         var dlg = new ContentDialog
         {
-            Title = title, Content = message, CloseButtonText = "OK", XamlRoot = XamlRoot
+            Title = title,
+            Content = message,
+            CloseButtonText = "OK",
+            XamlRoot = XamlRoot
         };
         await dlg.ShowAsync();
     }

@@ -11,8 +11,8 @@ public class AppSettings
     public bool AutoscanPromptOnAttach { get; set; } = true;
     public bool RunAtLogin { get; set; } = false;
     public bool RunValidationsConcurrently { get; set; } = true;
-    public int  NagMessageIndex  { get; set; } = 0;
-    public bool HideDonationNag  { get; set; } = false;
+    public int NagMessageIndex { get; set; } = 0;
+    public bool HideDonationNag { get; set; } = false;
     public List<string> KnownHashLocations { get; set; } = new();
     public List<string> KnownHashFiles { get; set; } = new();
 
