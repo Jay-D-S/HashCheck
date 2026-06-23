@@ -144,6 +144,8 @@ public sealed class HashSetService
         var hashFile = await HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: true);
         var engine = new ValidationEngine();
         var report = await engine.ValidateAsync(hashFile, mediaRoot, progress, ct, pauseToken);
+        report.VolumeSerial = volumeSerial;
+        report.ScanRoot = mediaRoot;
 
         // Append validation record — note which copy of the group was validated
         hashFile.Validations.Add(new ValidationEntry(
@@ -257,6 +259,14 @@ public sealed class HashSetService
         newData.FilePath = hashFilePath;
         await HashFileWriter.WriteAsync(newData, hashFilePath);
         return newData;
+    }
+
+    /// <summary>Toggles the per-hash-set <c>Autoscan</c> flag and saves. When <c>true</c>, validation will automatically add newly-discovered files to the hash set.</summary>
+    public async Task SetAutoscanAsync(string hashFilePath, bool autoscan)
+    {
+        var hashFile = await HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: false);
+        hashFile.Autoscan = autoscan;
+        await HashFileWriter.WriteAsync(hashFile, hashFilePath);
     }
 
     /// <summary>Updates the <see cref="VolumeEntry.ScanSubPath"/> for the volume with the given <paramref name="serial"/> and saves the file.</summary>

@@ -35,7 +35,10 @@ public sealed class SchedulerService : IDisposable
     /// <summary>Starts the reminder and volume-poll timers. Must be called after the UI is initialised so event handlers can marshal back to the dispatcher queue.</summary>
     public void Start()
     {
-        _reminderTimer = new Timer(OnReminderTick, null, TimeSpan.Zero, TimeSpan.FromHours(24));
+        // Delay the first reminder check by 5 s — XamlRoot on the main window is not set until
+        // after the first frame renders, so firing immediately (TimeSpan.Zero) would silently drop
+        // the dialog via the "if (xamlRoot == null) return" guard in OnRemindersAvailable.
+        _reminderTimer = new Timer(OnReminderTick, null, TimeSpan.FromSeconds(5), TimeSpan.FromHours(24));
         // Delay the first volume check by 10 s to let the window and tray settle before firing events
         _volumeTimer = new Timer(OnVolumeTick, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30));
     }

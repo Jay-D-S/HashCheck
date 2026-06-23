@@ -4,6 +4,7 @@ using HashCheck.Core.Scheduling;
 using HashCheck.Core.Volumes;
 using HashCheck.Services;
 using HashCheck.Tray;
+using HashCheck.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -103,17 +104,29 @@ public partial class App : Application
         {
             try
             {
-                var names = string.Join(", ", items.Take(3).Select(i => i.HashFile.MediaName));
                 GetAppWindow(MainWindow)?.Show();
                 MainWindow.Activate();
 
                 var xamlRoot = MainWindow.Content?.XamlRoot;
                 if (xamlRoot == null) return;
 
+                string body;
+                if (items.Count > 20)
+                {
+                    body = $"{items.Count} hash sets are overdue for validation.\n" +
+                           "Please use the Dashboard to review and validate them.";
+                }
+                else
+                {
+                    var list = string.Join("\n", items.Select(i => $"  • {i.HashFile.MediaName}"));
+                    var verb = items.Count == 1 ? "is" : "are";
+                    body = $"The following media {verb} due for verification:\n{list}";
+                }
+
                 var dlg = new ContentDialog
                 {
                     Title = "Validation Due",
-                    Content = $"The following media are due for verification:\n{names}",
+                    Content = body,
                     PrimaryButtonText = "Validate Now",
                     SecondaryButtonText = "Snooze 7 days",
                     CloseButtonText = "Dismiss",
@@ -122,7 +135,12 @@ public partial class App : Application
 
                 var result = await dlg.ShowAsync();
                 if (result == ContentDialogResult.Primary)
-                    ShowAndNavigate("validate");
+                {
+                    if (items.Count == 1 && MainWindow is MainWindow mw)
+                        mw.NavigateTo("validate", new ValidateRequest(items[0].HashFile.FilePath));
+                    else
+                        ShowAndNavigate("dashboard");
+                }
             }
             catch (Exception ex)
             {

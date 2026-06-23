@@ -32,6 +32,39 @@ public sealed partial class DashboardPage : Page
         _ = ViewModel.LoadAsync();
     }
 
+    private void SortHeader_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string col)
+        {
+            ViewModel.SortBy(col);
+            UpdateSortHeaders();
+        }
+    }
+
+    private void UpdateSortHeaders()
+    {
+        var headers = new (Button Btn, string Label)[]
+        {
+            (SortMedia,        "Media"),
+            (SortDescription,  "Description"),
+            (SortFiles,        "Files"),
+            (SortSize,         "Size"),
+            (SortCreated,      "Created"),
+            (SortLastVerified, "Last Verified"),
+            (SortStatus,       "Status"),
+            (SortAvailable,    "Available"),
+            (SortNextDue,      "Next Due"),
+        };
+        foreach (var (btn, label) in headers)
+        {
+            var col = btn.Tag as string;
+            var indicator = ViewModel.SortColumn == col
+                ? (ViewModel.SortAscending ? " ▲" : " ▼")
+                : "";
+            btn.Content = label + indicator;
+        }
+    }
+
     private void ItemsList_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
     {
         var item = ViewModel.SelectedItem;

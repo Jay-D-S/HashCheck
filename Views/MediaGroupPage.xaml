@@ -87,7 +87,7 @@
         </ListView>
 
         <!-- Action bar -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0" VerticalAlignment="Center">
             <Button Content="Validate"
                     Click="Validate_Click"
                     IsEnabled="{x:Bind ViewModel.CanValidateSelected, Mode=OneWay}"
@@ -97,6 +97,13 @@
                     Click="EditScanPath_Click"
                     IsEnabled="{x:Bind ViewModel.HasSelectedRow, Mode=OneWay}"/>
             <Button Content="Back" Click="Back_Click"/>
+            <Border Width="1" Height="20" Margin="4,0"
+                    Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+            <CheckBox Content="Autoscan new files"
+                      IsChecked="{x:Bind ViewModel.Autoscan, Mode=TwoWay}"
+                      IsEnabled="{x:Bind ViewModel.HasSelectedRow, Mode=OneWay}"
+                      VerticalAlignment="Center"
+                      ToolTipService.ToolTip="When on, any files found on the media during validation that are not in the hash set will be hashed and added automatically."/>
         </StackPanel>
     </Grid>
 </Page>

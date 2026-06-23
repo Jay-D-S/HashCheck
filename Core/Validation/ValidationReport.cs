@@ -20,6 +20,10 @@ public class ValidationReport
     public DateTime Timestamp { get; set; }
     public string MediaName { get; set; } = "";
     public string HashFilePath { get; set; } = "";
+    /// <summary>Serial number of the volume that was validated (e.g. <c>1CBA-E2C8</c>).</summary>
+    public string VolumeSerial { get; set; } = "";
+    /// <summary>Absolute path of the folder that was scanned (the volume scan root).</summary>
+    public string ScanRoot { get; set; } = "";
 
     public int TotalFilesFound { get; set; }
     public int TotalDirectoriesFound { get; set; }

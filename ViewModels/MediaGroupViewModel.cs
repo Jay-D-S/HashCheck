@@ -73,6 +73,24 @@ public partial class MediaGroupViewModel : ViewModelBase
     [ObservableProperty] private string _description = "";
     [ObservableProperty] private VolumeRow? _selectedRow;
 
+    private bool _autoscan;
+    /// <summary>Whether new files found during validation are automatically added to the hash set. Saved to the <c>.hash</c> file immediately on change.</summary>
+    public bool Autoscan
+    {
+        get => _autoscan;
+        set
+        {
+            if (SetProperty(ref _autoscan, value) && !string.IsNullOrEmpty(HashFilePath))
+                _ = SaveAutoscanAsync(value);
+        }
+    }
+
+    private async Task SaveAutoscanAsync(bool value)
+    {
+        try { await _service.SetAutoscanAsync(HashFilePath, value); }
+        catch { }
+    }
+
     partial void OnSelectedRowChanged(VolumeRow? oldValue, VolumeRow? newValue)
     {
         OnPropertyChanged(nameof(HasSelectedRow));
@@ -95,6 +113,8 @@ public partial class MediaGroupViewModel : ViewModelBase
         var hashFile = await HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: false);
         MediaName = hashFile.MediaName;
         Description = hashFile.Description;
+        _autoscan = hashFile.Autoscan;
+        OnPropertyChanged(nameof(Autoscan));
 
         var onlineMap = VolumeLocator.GetAllVolumes()
             .ToDictionary(v => v.SerialNumber, StringComparer.OrdinalIgnoreCase);

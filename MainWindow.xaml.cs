@@ -61,7 +61,9 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    public void NavigateTo(string tag)
+    public void NavigateTo(string tag) => NavigateTo(tag, null);
+
+    public void NavigateTo(string tag, object? parameter)
     {
         var type = tag switch
         {
@@ -81,8 +83,9 @@ public sealed partial class MainWindow : Window
         if (item != null) NavView.SelectedItem = item;
         _suppressNavigation = false;
 
-        if (ContentFrame.CurrentSourcePageType != type)
-            ContentFrame.Navigate(type, null, new EntranceNavigationTransitionInfo());
+        // Always navigate when a parameter is supplied so the page receives it even if already current.
+        if (parameter != null || ContentFrame.CurrentSourcePageType != type)
+            ContentFrame.Navigate(type, parameter, new EntranceNavigationTransitionInfo());
     }
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)

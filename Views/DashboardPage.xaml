@@ -12,6 +12,45 @@
 
     <Page.Resources>
         <conv:BoolToOnlineBrushConverter x:Key="BoolToOnlineBrushConverter"/>
+        <Style x:Key="SortHeaderStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root" Background="Transparent" Padding="{TemplateBinding Padding}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal"/>
+                                    <VisualState x:Name="PointerOver">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity"
+                                                             To="0.65" Duration="0:0:0.1"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity"
+                                                             To="0.45" Duration="0"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled"/>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                              FontWeight="{TemplateBinding FontWeight}"
+                                              Foreground="{TemplateBinding Foreground}"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Page.Resources>
 
     <Grid Margin="24">
@@ -54,15 +93,15 @@
                 <ColumnDefinition Width="110"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0"/>
-            <TextBlock Grid.Column="1" Text="Media"        FontWeight="SemiBold"/>
-            <TextBlock Grid.Column="2" Text="Description"  FontWeight="SemiBold"/>
-            <TextBlock Grid.Column="3" Text="Files"        FontWeight="SemiBold"/>
-            <TextBlock Grid.Column="4" Text="Size"         FontWeight="SemiBold"/>
-            <TextBlock Grid.Column="5" Text="Created"      FontWeight="SemiBold"/>
-            <TextBlock Grid.Column="6" Text="Last Verified" FontWeight="SemiBold"/>
-            <TextBlock Grid.Column="7" Text="Status"       FontWeight="SemiBold"/>
-            <TextBlock Grid.Column="8" Text="Available"    FontWeight="SemiBold"/>
-            <TextBlock Grid.Column="9" Text="Next Due"     FontWeight="SemiBold"/>
+            <Button x:Name="SortMedia"        Grid.Column="1" Content="Media"        Tag="Media"        Style="{StaticResource SortHeaderStyle}" Click="SortHeader_Click"/>
+            <Button x:Name="SortDescription"  Grid.Column="2" Content="Description"  Tag="Description"  Style="{StaticResource SortHeaderStyle}" Click="SortHeader_Click"/>
+            <Button x:Name="SortFiles"        Grid.Column="3" Content="Files"        Tag="Files"        Style="{StaticResource SortHeaderStyle}" Click="SortHeader_Click"/>
+            <Button x:Name="SortSize"         Grid.Column="4" Content="Size"         Tag="Size"         Style="{StaticResource SortHeaderStyle}" Click="SortHeader_Click"/>
+            <Button x:Name="SortCreated"      Grid.Column="5" Content="Created"      Tag="Created"      Style="{StaticResource SortHeaderStyle}" Click="SortHeader_Click"/>
+            <Button x:Name="SortLastVerified" Grid.Column="6" Content="Last Verified" Tag="LastVerified" Style="{StaticResource SortHeaderStyle}" Click="SortHeader_Click"/>
+            <Button x:Name="SortStatus"       Grid.Column="7" Content="Status"       Tag="Status"       Style="{StaticResource SortHeaderStyle}" Click="SortHeader_Click"/>
+            <Button x:Name="SortAvailable"    Grid.Column="8" Content="Available"    Tag="Available"    Style="{StaticResource SortHeaderStyle}" Click="SortHeader_Click"/>
+            <Button x:Name="SortNextDue"      Grid.Column="9" Content="Next Due"     Tag="NextDue"      Style="{StaticResource SortHeaderStyle}" Click="SortHeader_Click"/>
         </Grid>
 
         <ListView
