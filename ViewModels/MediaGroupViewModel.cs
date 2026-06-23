@@ -73,11 +73,17 @@ public partial class MediaGroupViewModel : ViewModelBase
     [ObservableProperty] private string _description = "";
     [ObservableProperty] private VolumeRow? _selectedRow;
 
-    partial void OnSelectedRowChanged(VolumeRow? oldValue, VolumeRow? newValue) =>
+    partial void OnSelectedRowChanged(VolumeRow? oldValue, VolumeRow? newValue)
+    {
         OnPropertyChanged(nameof(HasSelectedRow));
+        OnPropertyChanged(nameof(CanValidateSelected));
+    }
 
     public bool HasSelectedRow => SelectedRow != null;
     public bool AnyOnline => Volumes.Any(v => v.IsOnline);
+
+    /// <summary><c>true</c> when a row is selected and that volume is currently online (mounted). Used to enable the Validate button on MediaGroupPage.</summary>
+    public bool CanValidateSelected => SelectedRow?.IsOnline == true;
 
     public ObservableCollection<VolumeRow> Volumes { get; } = new();
 

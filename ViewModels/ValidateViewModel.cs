@@ -102,6 +102,9 @@ public sealed partial class ValidationRow : ObservableObject
     }
 }
 
+/// <summary>Navigation parameter for <see cref="HashCheck.Views.ValidatePage"/>. Carries the hash file path and an optional serial number to restrict validation to a single volume (used when navigating from MediaGroupPage).</summary>
+public record ValidateRequest(string HashFilePath, string? RestrictToSerial = null);
+
 /// <summary>Wizard step for the validate flow.</summary>
 public enum ValidateStep { PickFile, InsertMedia, Validating }
 
@@ -155,7 +158,7 @@ public partial class ValidateViewModel : ViewModelBase
         _settings = settings;
     }
 
-    public async Task StartWithFileAsync(string hashFilePath)
+    public async Task StartWithFileAsync(string hashFilePath, string? restrictToSerial = null)
     {
         HashFilePath = hashFilePath;
         _hashFile = await Core.HashFile.HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: false);
@@ -165,11 +168,17 @@ public partial class ValidateViewModel : ViewModelBase
         AllDone = false;
         IsRunning = false;
 
+        // Register as the active validation so the user can navigate away and return.
+        AppServices.ActiveValidation = this;
+
         var onlineMap = VolumeLocator.GetAllVolumes()
             .ToDictionary(v => v.SerialNumber, StringComparer.OrdinalIgnoreCase);
 
         foreach (var ve in _hashFile.Volumes)
         {
+            if (restrictToSerial != null &&
+                !string.Equals(ve.SerialNumber, restrictToSerial, StringComparison.OrdinalIgnoreCase))
+                continue;
             if (onlineMap.TryGetValue(ve.SerialNumber, out var vol))
                 Rows.Add(new ValidationRow(ve.SerialNumber, ve.Label,
                     ve.GetFullScanPath(vol.RootPath)));
@@ -256,6 +265,7 @@ public partial class ValidateViewModel : ViewModelBase
 
         IsRunning = false;
         AllDone = true;
+        AppServices.ActiveValidation = null;
     }
 
     private async Task ValidateRowAsync(ValidationRow row)

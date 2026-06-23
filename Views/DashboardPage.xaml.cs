@@ -20,8 +20,12 @@ public sealed partial class DashboardPage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        ActiveValidationBar.IsOpen = AppServices.ActiveValidation != null;
         await ViewModel.LoadAsync();
     }
+
+    private void ReturnToValidation_Click(object sender, RoutedEventArgs e) =>
+        Frame.Navigate(typeof(ValidatePage));
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {

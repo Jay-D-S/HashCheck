@@ -23,8 +23,12 @@ public sealed partial class MediaGroupPage : Page
             await ViewModel.LoadAsync(hashFilePath);
     }
 
-    private void Validate_Click(object sender, RoutedEventArgs e) =>
-        Frame.Navigate(typeof(ValidatePage), ViewModel.HashFilePath);
+    private void Validate_Click(object sender, RoutedEventArgs e)
+    {
+        var row = ViewModel.SelectedRow;
+        if (row == null) return;
+        Frame.Navigate(typeof(ValidatePage), new ValidateRequest(ViewModel.HashFilePath, row.SerialNumber));
+    }
 
     // Opens a FolderPicker first (no picker-inside-dialog conflict) then confirms.
     private async void EditScanPath_Click(object sender, RoutedEventArgs e)

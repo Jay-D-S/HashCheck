@@ -90,8 +90,9 @@
         <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
             <Button Content="Validate"
                     Click="Validate_Click"
-                    IsEnabled="{x:Bind ViewModel.AnyOnline, Mode=OneWay}"
-                    Style="{ThemeResource AccentButtonStyle}"/>
+                    IsEnabled="{x:Bind ViewModel.CanValidateSelected, Mode=OneWay}"
+                    Style="{ThemeResource AccentButtonStyle}"
+                    ToolTipService.ToolTip="Validate the selected volume. To validate all volumes in this group, use the Dashboard."/>
             <Button Content="Edit Mirror Root"
                     Click="EditScanPath_Click"
                     IsEnabled="{x:Bind ViewModel.HasSelectedRow, Mode=OneWay}"/>

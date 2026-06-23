@@ -15,7 +15,8 @@ public sealed partial class ValidatePage : Page
 
     public ValidatePage()
     {
-        ViewModel = new ValidateViewModel(AppServices.HashSets, AppServices.Settings.Current);
+        // Reuse an in-progress validation if one exists so the user can navigate away and return.
+        ViewModel = AppServices.ActiveValidation ?? new ValidateViewModel(AppServices.HashSets, AppServices.Settings.Current);
         InitializeComponent();
         LoadDriveList();
     }
@@ -23,8 +24,14 @@ public sealed partial class ValidatePage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+
+        // If we reattached to a running validation, do not restart it.
+        if (AppServices.ActiveValidation != null) return;
+
         if (e.Parameter is string hashFilePath)
             await ViewModel.StartWithFileAsync(hashFilePath);
+        else if (e.Parameter is ValidateRequest req)
+            await ViewModel.StartWithFileAsync(req.HashFilePath, req.RestrictToSerial);
     }
 
     private void LoadDriveList()
