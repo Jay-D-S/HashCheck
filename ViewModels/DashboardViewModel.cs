@@ -7,9 +7,11 @@ using HashCheck.Services;
 
 namespace HashCheck.ViewModels;
 
+/// <summary>View model for a single row in the dashboard list. Combines <see cref="HashFileData"/> with the current online/offline status of its volumes.</summary>
 public partial class DashboardItem : ObservableObject
 {
     public HashFileData HashFile { get; }
+    /// <summary>Number of this hash set's volumes that are currently mounted.</summary>
     public int OnlineCount { get; }
 
     public string MediaName => HashFile.MediaName;
@@ -45,6 +47,7 @@ public partial class DashboardItem : ObservableObject
     }
 }
 
+/// <summary>View model for the dashboard page. Loads all known hash sets and tracks the selected item.</summary>
 public partial class DashboardViewModel : ViewModelBase
 {
     private readonly HashSetService _service;

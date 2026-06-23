@@ -4,8 +4,10 @@ using HashCheck.Core.Scanning;
 
 namespace HashCheck.Core.Validation;
 
+/// <summary>Compares media files against a <see cref="HashFileData"/> baseline and produces a <see cref="ValidationReport"/>.</summary>
 public sealed class ValidationEngine
 {
+    /// <summary>Scans <paramref name="mediaRoot"/> and compares each file's hash against the stored baseline. Supports cooperative pause via <paramref name="pauseToken"/>.</summary>
     public async Task<ValidationReport> ValidateAsync(
         HashFileData hashFile,
         string mediaRoot,
@@ -125,9 +127,11 @@ public sealed class ValidationEngine
         return report;
     }
 
-    // Returns the subset of paths that are not children of any other path in the list.
-    // With the new format [PATHS] starts with "\" (the scan root), so this returns ["\"]
-    // and the scanner recurses into everything below it exactly once.
+    /// <summary>
+    /// Returns the subset of <paramref name="paths"/> that are not children of any other path in the list.
+    /// Because <c>[PATHS]</c> always starts with <c>\</c> (the scan root), this typically returns <c>["\"]</c>,
+    /// so <see cref="FileScanner"/> visits every subdirectory exactly once without double-counting.
+    /// </summary>
     internal static IReadOnlyList<string> GetTopLevelPaths(IReadOnlyList<string> paths)
     {
         if (paths.Count == 0) return new[] { "\\" };

@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Media;
 
 namespace HashCheck.Converters;
 
+/// <summary>Returns <c>true</c> when the bound value is non-null.</summary>
 public sealed class NotNullToBoolConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language) =>
@@ -13,6 +14,7 @@ public sealed class NotNullToBoolConverter : IValueConverter
         throw new NotImplementedException();
 }
 
+/// <summary>Returns <see cref="Visibility.Visible"/> when the bound string is non-empty, <see cref="Visibility.Collapsed"/> otherwise.</summary>
 public sealed class EmptyToVisibleConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language) =>
@@ -22,6 +24,7 @@ public sealed class EmptyToVisibleConverter : IValueConverter
         throw new NotImplementedException();
 }
 
+/// <summary>Maps <c>true</c> → <see cref="Visibility.Visible"/>, <c>false</c> → <see cref="Visibility.Collapsed"/>.</summary>
 public sealed class BoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language) =>
@@ -31,6 +34,7 @@ public sealed class BoolToVisibilityConverter : IValueConverter
         value is Visibility.Visible;
 }
 
+/// <summary>Maps <c>true</c> → <see cref="Visibility.Collapsed"/>, <c>false</c> → <see cref="Visibility.Visible"/> (inverse of <see cref="BoolToVisibilityConverter"/>).</summary>
 public sealed class InverseBoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language) =>
@@ -40,6 +44,7 @@ public sealed class InverseBoolToVisibilityConverter : IValueConverter
         value is Visibility.Collapsed;
 }
 
+/// <summary>Maps an online/offline boolean to a green brush (online) or grey brush (offline). Brushes are static to avoid reallocating on every binding update.</summary>
 public sealed class BoolToOnlineBrushConverter : IValueConverter
 {
     private static readonly SolidColorBrush OnlineBrush = new(Windows.UI.Color.FromArgb(255, 45, 184, 77));

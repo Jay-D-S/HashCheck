@@ -11,8 +11,10 @@ using HashCheck.Services;
 
 namespace HashCheck.ViewModels;
 
+/// <summary>Wizard step for the Create Hash flow.</summary>
 public enum CreateStep { SelectScope, Configure, Progress, Done }
 
+/// <summary>View model for the create-hash wizard. Drives a multi-step UI from scope selection through hashing to completion.</summary>
 public partial class CreateHashViewModel : ViewModelBase
 {
     private readonly HashSetService _service;
@@ -42,6 +44,7 @@ public partial class CreateHashViewModel : ViewModelBase
     [ObservableProperty] private bool _filterModeExclude = true;
     [ObservableProperty] private bool _autoscan = false;
 
+    // FilterModeInclude is the logical inverse — notify it whenever FilterModeExclude changes
     partial void OnFilterModeExcludeChanged(bool value)
     {
         OnPropertyChanged(nameof(FilterModeInclude));
@@ -112,6 +115,7 @@ public partial class CreateHashViewModel : ViewModelBase
     public Microsoft.UI.Xaml.Visibility ProgressMessageVisibility =>
         HasProgressMessage ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
 
+    // ProgressBar.Value/Maximum require double; these properties expose the long values as double
     public double BytesProcessedD => BytesProcessed;
     public double BytesTotalD => BytesTotal > 0 ? BytesTotal : 1;
 

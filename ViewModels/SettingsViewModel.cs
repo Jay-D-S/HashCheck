@@ -6,6 +6,7 @@ using HashCheck.Core.Settings;
 
 namespace HashCheck.ViewModels;
 
+/// <summary>View model for the settings page. Syncs UI fields with <see cref="AppSettings"/> and handles run-at-login registry changes.</summary>
 public partial class SettingsViewModel : ViewModelBase
 {
     private readonly SettingsStore _store;
@@ -78,6 +79,8 @@ public partial class SettingsViewModel : ViewModelBase
     {
         try
         {
+            // HKCU\...\Run is written/deleted rather than enabled/disabled because there is
+            // no native "disabled" state — the value simply must be absent to suppress autostart.
             const string keyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
             const string valueName = "HashCheck";
             using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(keyPath, writable: true);

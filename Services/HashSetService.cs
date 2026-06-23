@@ -8,6 +8,7 @@ using HashCheck.Core.Volumes;
 
 namespace HashCheck.Services;
 
+/// <summary>Parameters for creating a new hash set. <see cref="MediaRoot"/> is the absolute scan root (may be a subfolder, not necessarily the drive root).</summary>
 public record CreateOptions(
     string MediaRoot,
     string SerialNumber,
@@ -22,6 +23,7 @@ public record CreateOptions(
     string StoragePath,
     bool Autoscan = false);
 
+/// <summary>High-level coordinator for all hash-set operations: create, validate, autoscan, re-create, mirror management, and dashboard loading.</summary>
 public sealed class HashSetService
 {
     private readonly SettingsStore _settings;
@@ -31,6 +33,7 @@ public sealed class HashSetService
         _settings = settings;
     }
 
+    /// <summary>Scans the media, hashes all files, writes a new <c>.hash</c> file to <see cref="CreateOptions.StoragePath"/>, and registers it in known files.</summary>
     public async Task<HashFileData> CreateAsync(
         CreateOptions options,
         IProgress<ScanProgress>? progress,
@@ -129,6 +132,7 @@ public sealed class HashSetService
         return data;
     }
 
+    /// <summary>Validates <paramref name="mediaRoot"/> against the stored baseline, appends a <c>[VALIDATIONS]</c> entry, and optionally runs autoscan if enabled in the hash file.</summary>
     public async Task<ValidationReport> ValidateAsync(
         string hashFilePath,
         string mediaRoot,
@@ -176,12 +180,15 @@ public sealed class HashSetService
         return report;
     }
 
+    /// <summary>Add-only incremental scan: discovers new files on <paramref name="mediaRoot"/> not already in the hash set and persists them. Never re-hashes or removes existing entries.</summary>
     public async Task<AutoscanResult> AutoscanAsync(
         string hashFilePath,
         string mediaRoot,
         IProgress<ScanProgress>? progress,
         CancellationToken ct)
     {
+        // Skip integrity check here — autoscan is time-sensitive (triggered on volume attach) and
+        // the file was already verified when it was last validated.
         var hashFile = await HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: false);
         var autoscanEngine = new AutoscanEngine();
         var result = await autoscanEngine.ScanAsync(hashFile, mediaRoot, progress, ct);
@@ -201,6 +208,7 @@ public sealed class HashSetService
         return result;
     }
 
+    /// <summary>Full re-baseline: backs up the existing <c>.hash</c> file, re-hashes all files from scratch, resets <c>DateCreated</c>, clears the <c>[VALIDATIONS]</c> log, and preserves all registered volumes.</summary>
     public async Task<HashFileData> ReCreateAsync(
         string hashFilePath,
         string mediaRoot,
@@ -251,6 +259,7 @@ public sealed class HashSetService
         return newData;
     }
 
+    /// <summary>Updates the <see cref="VolumeEntry.ScanSubPath"/> for the volume with the given <paramref name="serial"/> and saves the file.</summary>
     public async Task UpdateVolumeScanPathAsync(string hashFilePath, string serial, string scanSubPath)
     {
         var hashFile = await HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: false);
@@ -261,6 +270,7 @@ public sealed class HashSetService
         await HashFileWriter.WriteAsync(hashFile, hashFilePath);
     }
 
+    /// <summary>Registers an additional media copy (mirror) in the <c>[VOLUMES]</c> section. No-op if <paramref name="serial"/> is already present.</summary>
     public async Task AddVolumeAsync(string hashFilePath, string serial, string label, long totalBytes,
         string scanSubPath = @"\")
     {
@@ -271,9 +281,11 @@ public sealed class HashSetService
         await HashFileWriter.WriteAsync(hashFile, hashFilePath);
     }
 
+    /// <summary>Loads all known hash files, returning only the data (no diagnostics). Convenience wrapper over <see cref="LoadAllKnownWithDiagnosticsAsync"/>.</summary>
     public Task<IReadOnlyList<HashFileData>> LoadAllKnownAsync() =>
         LoadAllKnownWithDiagnosticsAsync().ContinueWith(t => t.Result.Data);
 
+    /// <summary>Loads all known hash files from <see cref="AppSettings.KnownHashFiles"/> and scans configured folders. Returns the data along with a human-readable diagnostics string for the dashboard status area.</summary>
     public async Task<(IReadOnlyList<HashFileData> Data, string Diagnostics)> LoadAllKnownWithDiagnosticsAsync()
     {
         var result = new List<HashFileData>();
@@ -351,11 +363,13 @@ public sealed class HashSetService
         return (result, diag.ToString().TrimEnd());
     }
 
+    /// <summary>Removes <paramref name="filePath"/> from the known-files list without deleting it from disk.</summary>
     public void RemoveFromTracking(string filePath)
     {
         _settings.RemoveKnownHashFile(filePath);
     }
 
+    /// <summary>Removes <paramref name="filePath"/> from the known-files list and permanently deletes the file from disk.</summary>
     public void RemoveAndDeleteHashFile(string filePath)
     {
         _settings.RemoveKnownHashFile(filePath);

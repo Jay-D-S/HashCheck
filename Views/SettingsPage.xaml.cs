@@ -6,6 +6,7 @@ using WinRT.Interop;
 
 namespace HashCheck.Views;
 
+/// <summary>Code-behind for the settings page.</summary>
 public sealed partial class SettingsPage : Page
 {
     public SettingsViewModel ViewModel { get; }

@@ -6,6 +6,7 @@ using HashCheck.Services;
 
 namespace HashCheck.ViewModels;
 
+/// <summary>View model for a single registered volume row on the MediaGroupPage.</summary>
 public partial class VolumeRow : ObservableObject
 {
     public string SerialNumber { get; }
@@ -61,6 +62,7 @@ public partial class VolumeRow : ObservableObject
     }
 }
 
+/// <summary>View model for the MediaGroupPage. Displays all registered volumes for a hash set and their current online/offline state.</summary>
 public partial class MediaGroupViewModel : ViewModelBase
 {
     private readonly HashSetService _service;

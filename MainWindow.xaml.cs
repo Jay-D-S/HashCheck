@@ -7,10 +7,12 @@ using WinRT.Interop;
 
 namespace HashCheck;
 
+/// <summary>Main application shell. Hosts the NavigationView and ContentFrame, minimises to tray on close, and exposes <see cref="NavigateTo"/> for tray-initiated navigation.</summary>
 public sealed partial class MainWindow : Window
 {
     private bool _realClose = false;
     private AppWindow? _appWindow;
+    // Prevents NavView_SelectionChanged from navigating again while NavigateTo() is programmatically setting the selected item
     private bool _suppressNavigation;
 
     public MainWindow()
@@ -41,6 +43,8 @@ public sealed partial class MainWindow : Window
                 if (File.Exists(iconPath))
                     _appWindow.SetIcon(iconPath);
 
+                // Intercept window close: hide to tray instead of exiting unless _realClose is set
+                // (set by the tray's Exit command via SetRealClose()).
                 _appWindow.Closing += (_, args) =>
                 {
                     if (!_realClose)
@@ -108,6 +112,7 @@ public sealed partial class MainWindow : Window
             ContentFrame.GoBack();
     }
 
+    /// <summary>Allows the next close event to proceed (rather than hiding to tray). Called by the tray Exit command.</summary>
     public void SetRealClose() => _realClose = true;
 
     public void SetTitle(string title)

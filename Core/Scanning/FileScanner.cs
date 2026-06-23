@@ -1,10 +1,14 @@
 namespace HashCheck.Core.Scanning;
 
+/// <summary>A file found during a directory scan, with its relative path (relative to the scan root) and metadata.</summary>
 public record ScanItem(string RelativePath, FileInfo Info);
 
+/// <summary>Recursive directory walker that applies <see cref="FilterEngine"/> rules and skips symlinks/junctions by default.</summary>
 public sealed class FileScanner
 {
     private readonly FilterEngine _filter;
+    // Symlink/junction traversal is deliberately disabled — following them risks infinite loops
+    // and scanning locations outside the intended scan root.
     private readonly bool _followSymlinks = false;
 
     public FileScanner(FilterEngine filter)
@@ -125,6 +129,7 @@ public sealed class FileScanner
         return rel.Length == 0 ? root + "\\" : root + "\\" + rel;
     }
 
+    /// <summary>Converts an absolute path to a path relative to <paramref name="mediaRoot"/> with a leading backslash. Returns <paramref name="absolutePath"/> unchanged if it is not under <paramref name="mediaRoot"/>.</summary>
     public static string ToRelative(string mediaRoot, string absolutePath)
     {
         var root = mediaRoot.TrimEnd('\\', '/');

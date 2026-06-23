@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace HashCheck.Views;
 
+/// <summary>Code-behind for the media group (volume management) page.</summary>
 public sealed partial class MediaGroupPage : Page
 {
     public MediaGroupViewModel ViewModel { get; }

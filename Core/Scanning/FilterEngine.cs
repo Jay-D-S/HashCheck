@@ -1,10 +1,12 @@
 namespace HashCheck.Core.Scanning;
 
+/// <summary>Evaluates per-set include/exclude filter patterns against relative file and directory paths.</summary>
 public sealed class FilterEngine
 {
     private readonly FilterMode _mode;
     private readonly IReadOnlyList<string> _patterns;
 
+    /// <summary>Default patterns applied when a new hash set is created with <see cref="FilterMode.Exclude"/>.</summary>
     public static readonly string[] DefaultExcludePatterns =
     [
         "Thumbs.db", "*.tmp", "$RECYCLE.BIN\\", "System Volume Information\\",
@@ -17,6 +19,7 @@ public sealed class FilterEngine
         _patterns = patterns.ToList();
     }
 
+    /// <summary>Returns <c>true</c> if a file at <paramref name="relativePath"/> passes the current filter rules.</summary>
     public bool ShouldIncludeFile(string relativePath)
     {
         var fileName = Path.GetFileName(relativePath);
@@ -25,6 +28,7 @@ public sealed class FilterEngine
         return _mode == FilterMode.Exclude ? !matchesAny : matchesAny;
     }
 
+    /// <summary>Returns <c>true</c> if a directory at <paramref name="relativePath"/> should be entered during a scan. In Include mode, directories are always entered (files inside are checked individually).</summary>
     public bool ShouldIncludeDirectory(string relativePath)
     {
         // Directory patterns end with \

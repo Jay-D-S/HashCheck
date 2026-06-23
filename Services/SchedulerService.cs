@@ -4,6 +4,7 @@ using HashCheck.Core.Volumes;
 
 namespace HashCheck.Services;
 
+/// <summary>Event data for a newly-detected volume mount. Carries identity info and the hash sets that track that volume and have <c>Autoscan=True</c>.</summary>
 public sealed class VolumeAttachedEventArgs(
     string serial, string label, string rootPath,
     IReadOnlyList<HashFileData> hashSets)
@@ -14,23 +15,28 @@ public sealed class VolumeAttachedEventArgs(
     public IReadOnlyList<HashFileData> HashSets { get; } = hashSets;
 }
 
+/// <summary>Background service that polls for overdue validations (every 24 h) and newly-mounted volumes (every 30 s). Raises events on the calling thread for the UI to handle.</summary>
 public sealed class SchedulerService : IDisposable
 {
     private readonly HashSetService _hashSets;
     private Timer? _reminderTimer;
     private Timer? _volumeTimer;
     private readonly HashSet<string> _knownOnlineSerials = new(StringComparer.OrdinalIgnoreCase);
+    // True only for the very first volume tick — used to snapshot the baseline without firing attach events
     private bool _initialVolumeScan = true;
 
+    /// <summary>Raised when one or more hash sets are overdue for validation.</summary>
     public event Action<IReadOnlyList<ReminderItem>>? RemindersAvailable;
+    /// <summary>Raised when a volume that has autoscan-enabled hash sets is newly mounted (not present at startup).</summary>
     public event Action<VolumeAttachedEventArgs>? VolumeAttached;
 
     public SchedulerService(HashSetService hashSets) => _hashSets = hashSets;
 
+    /// <summary>Starts the reminder and volume-poll timers. Must be called after the UI is initialised so event handlers can marshal back to the dispatcher queue.</summary>
     public void Start()
     {
         _reminderTimer = new Timer(OnReminderTick, null, TimeSpan.Zero, TimeSpan.FromHours(24));
-        // First volume check after 10s (let app settle), then every 30s
+        // Delay the first volume check by 10 s to let the window and tray settle before firing events
         _volumeTimer = new Timer(OnVolumeTick, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30));
     }
 

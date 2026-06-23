@@ -1,8 +1,9 @@
 namespace HashCheck.Core.HashFile;
 
+/// <summary>One registered copy of the media in a hash group. <c>ScanSubPath</c> is relative to the drive root (e.g. <c>\_PHOTOS\2026</c> or <c>\</c>).</summary>
 public record VolumeEntry(string SerialNumber, string Label, long TotalBytes, DateTime DateAdded, string ScanSubPath = @"\")
 {
-    // Returns the full scan path by combining the volume's mount root with its scan sub-path.
+    /// <summary>Combines <paramref name="volumeRootPath"/> with <see cref="ScanSubPath"/> to produce the absolute scan root for this volume.</summary>
     public string GetFullScanPath(string volumeRootPath)
     {
         var root = volumeRootPath.TrimEnd('\\');
@@ -11,13 +12,16 @@ public record VolumeEntry(string SerialNumber, string Label, long TotalBytes, Da
     }
 }
 
+/// <summary>In-memory representation of a <c>.hash</c> file. Mirrors the on-disk section order exactly; do not add sections without updating <see cref="HashFileReader"/> and <see cref="HashFileWriter"/>.</summary>
 public class HashFileData
 {
+    /// <summary>Absolute path to the <c>.hash</c> file on the PC (never on media).</summary>
     public string FilePath { get; set; } = "";
 
     // [META]
     public string Description { get; set; } = "";
-    public string MediaName { get; set; } = "";   // user-defined group name
+    /// <summary>User-defined group name, usually the primary volume label.</summary>
+    public string MediaName { get; set; } = "";
     public HashAlgorithmType Algorithm { get; set; } = HashAlgorithmType.XxHash3;
     public int ReminderDays { get; set; } = 180;
     public FilterMode FilterMode { get; set; } = FilterMode.Exclude;
@@ -39,13 +43,15 @@ public class HashFileData
     // [VALIDATIONS]
     public List<ValidationEntry> Validations { get; set; } = new();
 
-    // [PATHS]
+    // [PATHS] — fast scope index; always starts with "\" (the scan root)
     public List<string> Paths { get; set; } = new();
 
     // [FILES]
     public List<FileEntry> Files { get; set; } = new();
 
+    /// <summary>Timestamp of the most recent validation entry, or null if never validated.</summary>
     public DateTime? LastValidated => Validations.Count > 0 ? Validations[^1].Timestamp : null;
+    /// <summary>Date after which a new validation is due, based on <see cref="LastValidated"/> or <see cref="DateCreated"/>.</summary>
     public DateTime DueDate => (LastValidated ?? DateCreated).AddDays(ReminderDays);
     public bool IsOverdue => DateTime.UtcNow >= DueDate;
     public string StatusText => Validations.Count == 0 ? "Never verified"
@@ -53,8 +59,10 @@ public class HashFileData
         : "OK";
 }
 
+/// <summary>One file entry from the <c>[FILES]</c> section. <see cref="RelativePath"/> is relative to the scan root, with a leading backslash.</summary>
 public record FileEntry(string RelativePath, string Hash, long SizeBytes, DateTime ModifiedUtc);
 
+/// <summary>One row from the <c>[VALIDATIONS]</c> section, recording the outcome of a single validation run.</summary>
 public record ValidationEntry(
     DateTime Timestamp,
     string Status,

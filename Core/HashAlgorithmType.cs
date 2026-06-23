@@ -1,5 +1,6 @@
 namespace HashCheck.Core;
 
+/// <summary>Identifies the hashing algorithm stored in a <c>[META]</c> section. Enum ordinal matches the display index in <see cref="Hashing.HasherFactory"/>.</summary>
 public enum HashAlgorithmType
 {
     XxHash3,

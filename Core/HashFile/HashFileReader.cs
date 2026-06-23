@@ -3,16 +3,21 @@ using System.Text;
 
 namespace HashCheck.Core.HashFile;
 
+/// <summary>Thrown when the SHA-256 checksum in <c>[INTEGRITY]</c> does not match the file content.</summary>
 public class HashFileIntegrityException(string message) : Exception(message);
+/// <summary>Thrown when a <c>.hash</c> file cannot be parsed (missing magic header, malformed fields, etc.).</summary>
 public class HashFileParseException(string message) : Exception(message);
 
+/// <summary>Reads and parses a <c>.hash</c> file from disk, with optional integrity verification.</summary>
 public static class HashFileReader
 {
     private const string Magic = "HASHCHECK/1.0";
 
+    /// <summary>Reads the file at <paramref name="filePath"/>, optionally verifying the <c>[INTEGRITY]</c> SHA-256 checksum first.</summary>
     public static async Task<HashFileData> ReadAsync(string filePath, bool verifyIntegrity = true)
     {
         var bytes = await File.ReadAllBytesAsync(filePath);
+        // Skip BOM if present — the writer never emits one, but guard defensively
         int textStart = (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) ? 3 : 0;
         var text = Encoding.UTF8.GetString(bytes, textStart, bytes.Length - textStart);
         var lines = text.Split('\n').Select(l => l.TrimEnd('\r')).ToArray();
@@ -23,6 +28,7 @@ public static class HashFileReader
         return Parse(filePath, lines);
     }
 
+    /// <summary>Verifies the SHA-256 checksum stored in <c>[INTEGRITY]</c> against the raw bytes preceding that section. Always SHA-256 regardless of the content hash algorithm.</summary>
     private static void VerifyIntegrity(byte[] fileBytes, string[] lines, int textStart)
     {
         int integrityLineIndex = -1;
@@ -62,6 +68,7 @@ public static class HashFileReader
         if (cutoff < 0)
             throw new HashFileIntegrityException("Cannot locate [INTEGRITY] section in file bytes.");
 
+        // Hash only the bytes up to (but not including) the "\n[INTEGRITY]" marker
         var hash = Convert.ToHexString(SHA256.HashData(fileBytes.AsSpan(textStart, cutoff - textStart))).ToLowerInvariant();
         if (!hash.Equals(storedHash, StringComparison.OrdinalIgnoreCase))
             throw new HashFileIntegrityException("Integrity check failed. File may be corrupted.");
@@ -208,6 +215,7 @@ public static class HashFileReader
         if (!long.TryParse(parts[2], out var size)) return null;
         if (!DateTime.TryParse(parts[3], null, System.Globalization.DateTimeStyles.RoundtripKind, out var mtime)) return null;
 
+        // Files under the scan root itself are stored under "\" directory header
         var relativePath = dir == "\\" || dir == "/"
             ? "\\" + parts[0]
             : dir + "\\" + parts[0];

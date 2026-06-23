@@ -6,6 +6,7 @@ using HashCheck.Core.Validation;
 
 namespace HashCheck.ViewModels;
 
+/// <summary>View model for the report page. Wraps a <see cref="ValidationReport"/> and provides HTML and CSV export methods.</summary>
 public partial class ReportViewModel : ViewModelBase
 {
     public ValidationReport Report { get; }

@@ -10,6 +10,7 @@ using WinRT.Interop;
 
 namespace HashCheck.Views;
 
+/// <summary>Code-behind for the validation report page.</summary>
 public sealed partial class ReportPage : Page
 {
     private ReportViewModel? _vm;

@@ -6,6 +6,7 @@ using WinRT.Interop;
 
 namespace HashCheck.Views;
 
+/// <summary>Code-behind for the Create Hash wizard page.</summary>
 public sealed partial class CreateHashPage : Page
 {
     public CreateHashViewModel ViewModel { get; }
@@ -33,7 +34,7 @@ public sealed partial class CreateHashPage : Page
         }
     }
 
-    // Prevents re-entrant handling when PropagateToChildren triggers binding updates
+    // Guards against re-entrant checkbox change handling when PropagateToChildren fires binding updates on children
     private bool _suppressCheckBoxEvents;
 
     private void NodeCheckBox_StateChanged(object sender, RoutedEventArgs e)

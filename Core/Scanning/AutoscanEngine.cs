@@ -4,14 +4,17 @@ using HashCheck.Core.Validation;
 
 namespace HashCheck.Core.Scanning;
 
+/// <summary>Result of an autoscan run: only newly discovered files and directories are returned (existing entries are never re-hashed).</summary>
 public record AutoscanResult(
     IReadOnlyList<FileEntry> AddedFiles,
     IReadOnlyList<string> AddedPaths,
     int TotalScanned,
     int TotalErrors);
 
+/// <summary>Add-only incremental scanner: hashes files not already recorded in the hash set and returns them for merging. Never re-hashes or removes existing entries.</summary>
 public sealed class AutoscanEngine
 {
+    /// <summary>Scans <paramref name="mediaRoot"/> for files absent from <paramref name="hashFile"/> and returns their hashes. Only new files are hashed; existing entries are untouched.</summary>
     public async Task<AutoscanResult> ScanAsync(
         HashFileData hashFile,
         string mediaRoot,

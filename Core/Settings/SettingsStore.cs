@@ -2,6 +2,7 @@ using System.Text.Json;
 
 namespace HashCheck.Core.Settings;
 
+/// <summary>Loads, saves, and manages the live <see cref="AppSettings"/> instance backed by <c>%APPDATA%\HashCheck\settings.json</c>.</summary>
 public sealed class SettingsStore
 {
     private static readonly string SettingsPath =
@@ -10,8 +11,10 @@ public sealed class SettingsStore
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
+    /// <summary>The currently active settings. Always non-null; falls back to defaults if the file is missing or corrupt.</summary>
     public AppSettings Current { get; private set; } = new();
 
+    /// <summary>Reads settings from disk; silently uses defaults if the file is absent or cannot be parsed.</summary>
     public void Load()
     {
         try
@@ -34,6 +37,7 @@ public sealed class SettingsStore
         File.WriteAllText(SettingsPath, JsonSerializer.Serialize(Current, JsonOptions));
     }
 
+    /// <summary>Adds <paramref name="filePath"/> to <see cref="AppSettings.KnownHashFiles"/> if not already present, then saves.</summary>
     public void AddKnownHashFile(string filePath)
     {
         if (!Current.KnownHashFiles.Contains(filePath, StringComparer.OrdinalIgnoreCase))
@@ -43,6 +47,7 @@ public sealed class SettingsStore
         }
     }
 
+    /// <summary>Removes <paramref name="filePath"/> from <see cref="AppSettings.KnownHashFiles"/> (case-insensitive) and saves.</summary>
     public void RemoveKnownHashFile(string filePath)
     {
         Current.KnownHashFiles.RemoveAll(p =>

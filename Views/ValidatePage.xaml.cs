@@ -8,6 +8,7 @@ using WinRT.Interop;
 
 namespace HashCheck.Views;
 
+/// <summary>Code-behind for the validation page.</summary>
 public sealed partial class ValidatePage : Page
 {
     public ValidateViewModel ViewModel { get; }
@@ -62,7 +63,8 @@ public sealed partial class ValidatePage : Page
     private void CancelInsertMedia_Click(object sender, RoutedEventArgs e) =>
         ViewModel.CancelInsertMedia();
 
-    // Per-row button handlers — read the ValidationRow from the button's Tag.
+    // Per-row Pause/Resume/Cancel/ViewReport buttons store their ValidationRow in Button.Tag
+    // (set in XAML via {Binding}) so the handler can target the correct row without knowing which one.
     private void Pause_Click(object sender, RoutedEventArgs e)
     {
         if (((Button)sender).Tag is ValidationRow row) row.Pause();

@@ -8,8 +8,10 @@ using HashCheck.Services;
 
 namespace HashCheck.ViewModels;
 
+/// <summary>Lifecycle state of one validation row on the ValidatePage.</summary>
 public enum ValidationRowStatus { Queued, Running, Paused, Done, Failed, Cancelled }
 
+/// <summary>View model for a single volume row on ValidatePage. Owns its own <see cref="PauseToken"/> and <see cref="CancellationTokenSource"/> so each volume can be paused/cancelled independently.</summary>
 public sealed partial class ValidationRow : ObservableObject
 {
     public string SerialNumber { get; }
@@ -100,8 +102,10 @@ public sealed partial class ValidationRow : ObservableObject
     }
 }
 
+/// <summary>Wizard step for the validate flow.</summary>
 public enum ValidateStep { PickFile, InsertMedia, Validating }
 
+/// <summary>View model for the ValidatePage. Discovers online volumes for a hash set, builds per-volume rows, and drives concurrent or sequential validation runs.</summary>
 public partial class ValidateViewModel : ViewModelBase
 {
     private readonly HashSetService _service;
@@ -242,6 +246,8 @@ public partial class ValidateViewModel : ViewModelBase
         IsRunning = true;
         AllDone = false;
 
+        // Concurrent mode: all volume rows hash in parallel (good for separate physical drives).
+        // Sequential mode: one row at a time (avoids contention when mirrors share the same spindle).
         if (_settings.RunValidationsConcurrently && Rows.Count > 1)
             await Task.WhenAll(Rows.Select(ValidateRowAsync));
         else

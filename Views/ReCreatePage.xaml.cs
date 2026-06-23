@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace HashCheck.Views;
 
+/// <summary>Code-behind for the Re-create (full re-baseline) page.</summary>
 public sealed partial class ReCreatePage : Page
 {
     private string? _hashFilePath;

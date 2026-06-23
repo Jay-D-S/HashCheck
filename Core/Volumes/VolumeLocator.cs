@@ -3,6 +3,7 @@ using System.Text;
 
 namespace HashCheck.Core.Volumes;
 
+/// <summary>Discovers mounted volumes via P/Invoke <c>GetVolumeInformation</c> and <see cref="DriveInfo"/>. Always identifies volumes by serial number, not drive letter.</summary>
 public static class VolumeLocator
 {
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -17,6 +18,7 @@ public static class VolumeLocator
         StringBuilder? lpFileSystemNameBuffer,
         uint nFileSystemNameSize);
 
+    /// <summary>Returns identity information for the volume mounted at <paramref name="rootPath"/> (e.g. <c>D:\</c>), or <c>null</c> if the volume cannot be read. Assigns a sensible fallback label when the volume has none.</summary>
     public static VolumeIdentity? GetVolumeIdentity(string rootPath)
     {
         try
@@ -50,6 +52,7 @@ public static class VolumeLocator
         }
     }
 
+    /// <summary>Searches all ready drives for a volume whose serial number matches <paramref name="serialNumber"/> (case-insensitive). Returns <c>null</c> if the volume is not currently mounted.</summary>
     public static VolumeIdentity? FindBySerial(string serialNumber)
     {
         foreach (var drive in DriveInfo.GetDrives())
@@ -66,6 +69,7 @@ public static class VolumeLocator
         return null;
     }
 
+    /// <summary>Returns identity information for every drive that is currently ready (mounted and readable).</summary>
     public static IReadOnlyList<VolumeIdentity> GetAllVolumes()
     {
         var result = new List<VolumeIdentity>();
@@ -78,6 +82,7 @@ public static class VolumeLocator
         return result;
     }
 
+    // Converts the raw 32-bit serial from GetVolumeInformation into the canonical "ABCD-1234" display form
     private static string FormatSerial(uint serial) =>
         $"{serial >> 16:X4}-{serial & 0xFFFF:X4}";
 }

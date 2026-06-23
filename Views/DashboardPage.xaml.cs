@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace HashCheck.Views;
 
+/// <summary>Code-behind for the dashboard page.</summary>
 public sealed partial class DashboardPage : Page
 {
     public DashboardViewModel ViewModel { get; }
@@ -69,6 +70,8 @@ public sealed partial class DashboardPage : Page
             .Select(v => v.SerialNumber)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        // FolderPicker must be shown BEFORE ContentDialog — WinUI does not support showing a
+        // picker from within an open dialog (results in an E_FAIL COM exception on some builds).
         // Step 1: folder picker — opened before any ContentDialog to avoid WinUI picker conflict
         var folderPicker = new Windows.Storage.Pickers.FolderPicker();
         WinRT.Interop.InitializeWithWindow.Initialize(

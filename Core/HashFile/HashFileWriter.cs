@@ -3,12 +3,15 @@ using System.Text;
 
 namespace HashCheck.Core.HashFile;
 
+/// <summary>Serialises a <see cref="HashFileData"/> to disk in the canonical <c>.hash</c> plain-text format.</summary>
 public static class HashFileWriter
 {
+    /// <summary>Writes <paramref name="data"/> atomically via a temp file, then renames to <paramref name="filePath"/>. Appends a SHA-256 <c>[INTEGRITY]</c> checksum over the entire content.</summary>
     public static async Task WriteAsync(HashFileData data, string filePath)
     {
         var content = BuildContent(data);
         var contentBytes = Encoding.UTF8.GetBytes(content);
+        // [INTEGRITY] is always SHA-256 over the content bytes above it, regardless of the hash algorithm used for files
         var integrityHash = Convert.ToHexString(SHA256.HashData(contentBytes)).ToLowerInvariant();
 
         var full = content + "[INTEGRITY]\nSHA-256:" + integrityHash + "\n";
@@ -17,6 +20,7 @@ public static class HashFileWriter
         if (!string.IsNullOrEmpty(dir))
             Directory.CreateDirectory(dir);
 
+        // Write to a temp file first so a crash never leaves a partial .hash on disk
         var tempPath = filePath + ".tmp";
         await File.WriteAllTextAsync(tempPath, full, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
         File.Move(tempPath, filePath, overwrite: true);

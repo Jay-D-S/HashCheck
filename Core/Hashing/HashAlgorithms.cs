@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 
 namespace HashCheck.Core.Hashing;
 
+/// <summary>IHasher implementation using XxHash3 (64-bit non-cryptographic; fastest option, default).</summary>
 public sealed class XxHash3Hasher : IHasher
 {
     public HashAlgorithmType Algorithm => HashAlgorithmType.XxHash3;
@@ -21,6 +22,7 @@ public sealed class XxHash3Hasher : IHasher
     }
 }
 
+/// <summary>IHasher implementation using XxHash128 (128-bit non-cryptographic).</summary>
 public sealed class XxHash128Hasher : IHasher
 {
     public HashAlgorithmType Algorithm => HashAlgorithmType.XxHash128;
@@ -39,6 +41,7 @@ public sealed class XxHash128Hasher : IHasher
     }
 }
 
+/// <summary>IHasher implementation using CRC-64.</summary>
 public sealed class Crc64Hasher : IHasher
 {
     public HashAlgorithmType Algorithm => HashAlgorithmType.Crc64;
@@ -57,6 +60,7 @@ public sealed class Crc64Hasher : IHasher
     }
 }
 
+/// <summary>IHasher implementation using CRC-32.</summary>
 public sealed class Crc32Hasher : IHasher
 {
     public HashAlgorithmType Algorithm => HashAlgorithmType.Crc32;
@@ -75,6 +79,7 @@ public sealed class Crc32Hasher : IHasher
     }
 }
 
+/// <summary>IHasher implementation using MD5 via <see cref="System.Security.Cryptography.IncrementalHash"/>.</summary>
 public sealed class Md5Hasher : IHasher
 {
     public HashAlgorithmType Algorithm => HashAlgorithmType.MD5;
@@ -93,6 +98,7 @@ public sealed class Md5Hasher : IHasher
     }
 }
 
+/// <summary>IHasher implementation using SHA-1 via <see cref="System.Security.Cryptography.IncrementalHash"/>.</summary>
 public sealed class Sha1Hasher : IHasher
 {
     public HashAlgorithmType Algorithm => HashAlgorithmType.SHA1;
@@ -111,6 +117,7 @@ public sealed class Sha1Hasher : IHasher
     }
 }
 
+/// <summary>IHasher implementation using SHA-256 via <see cref="System.Security.Cryptography.IncrementalHash"/>.</summary>
 public sealed class Sha256Hasher : IHasher
 {
     public HashAlgorithmType Algorithm => HashAlgorithmType.SHA256;

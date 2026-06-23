@@ -1,10 +1,20 @@
 namespace HashCheck.Core.Validation;
 
-public enum NotMatchingReason { Corrupted, Modified }
+/// <summary>Why a file's hash did not match the stored value.</summary>
+public enum NotMatchingReason
+{
+    /// <summary>Hash differs but size and mtime are unchanged — likely silent bit-rot.</summary>
+    Corrupted,
+    /// <summary>Hash differs and size or mtime also changed — likely a legitimate edit.</summary>
+    Modified
+}
 
+/// <summary>A file whose computed hash did not match the stored hash.</summary>
 public record NotMatchingFile(string RelativePath, NotMatchingReason Reason);
+/// <summary>A file that could not be read during validation.</summary>
 public record ErrorFile(string RelativePath, string ErrorMessage);
 
+/// <summary>Complete result of one validation run, including per-category file lists.</summary>
 public class ValidationReport
 {
     public DateTime Timestamp { get; set; }
@@ -29,9 +39,10 @@ public class ValidationReport
     public List<ErrorFile> ErrorFiles { get; set; } = new();
     public List<string> NewFiles { get; set; } = new();
 
+    /// <summary><c>true</c> only when there are no corrupted, modified, missing, or error files.</summary>
     public bool Passed => TotalNotMatching == 0 && TotalMissing == 0 && TotalErrors == 0;
     public string Status => Passed ? "PASS" : "FAIL";
 
-    // Populated when autoscan ran after this validation
+    /// <summary>Populated when autoscan ran immediately after this validation (see <see cref="HashSetService.ValidateAsync"/>).</summary>
     public Scanning.AutoscanResult? AutoscanResult { get; set; }
 }

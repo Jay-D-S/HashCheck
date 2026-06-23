@@ -9,6 +9,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace HashCheck;
 
+/// <summary>Application entry point. Enforces single-instance via a named mutex, initialises services, hosts the tray icon, and drives the reminder/autoscan lifecycle.</summary>
 public partial class App : Application
 {
     public static Window MainWindow { get; private set; } = null!;
@@ -48,6 +49,7 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        // Named mutex ensures only one instance runs; the second instance exits immediately.
         _mutex = new Mutex(true, "HashCheck-SingleInstance-{A4E2F3B0-1234-5678-ABCD-EF1234567890}", out bool isNew);
         if (!isNew)
         {
@@ -255,6 +257,7 @@ public partial class App : Application
         if (s.HideDonationNag)
             return $"HashCheck v{version}";
 
+        // Advance the nag index each launch so a different message appears every time
         var nag = NagMessages[s.NagMessageIndex % NagMessages.Length];
         s.NagMessageIndex = (s.NagMessageIndex + 1) % NagMessages.Length;
         AppServices.Settings.Save();
@@ -326,6 +329,7 @@ public partial class App : Application
         }
     }
 
+    /// <summary>Retrieves the WinUI3 <see cref="Microsoft.UI.Windowing.AppWindow"/> for a given <see cref="Window"/> via its HWND. Returns <c>null</c> if the window is not yet created.</summary>
     private static Microsoft.UI.Windowing.AppWindow? GetAppWindow(Window window)
     {
         try

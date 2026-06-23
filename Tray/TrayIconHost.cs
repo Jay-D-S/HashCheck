@@ -2,6 +2,11 @@ using System.Runtime.InteropServices;
 
 namespace HashCheck.Tray;
 
+/// <summary>
+/// Manages the system-tray icon and context menu via P/Invoke.
+/// Uses <c>Shell_NotifyIconW</c> to add/remove the icon and <c>SetWindowSubclass</c> (comctl32)
+/// to intercept tray callback messages on the existing app HWND without a dedicated message window.
+/// </summary>
 public sealed class TrayIconHost : IDisposable
 {
     private const uint WM_APP_TRAY = 0x8000 + 1;
@@ -32,7 +37,8 @@ public sealed class TrayIconHost : IDisposable
     private NOTIFYICONDATAW _nid;
     private bool _disposed;
 
-    // Delegate must be kept alive to prevent GC
+    // The delegate field must be kept alive for the lifetime of the subclass — if it is GC'd,
+    // the next tray message will invoke a dangling function pointer and crash the process.
     private readonly SUBCLASSPROC _subclassDelegate;
 
     public event Action? ShowDashboardRequested;
@@ -118,12 +124,14 @@ public sealed class TrayIconHost : IDisposable
     [StructLayout(LayoutKind.Sequential)]
     private struct POINT { public int X, Y; }
 
+    /// <summary>Loads the app icon from <c>HashIcon.ico</c> in the output directory. Falls back to the system default application icon if the file is missing.</summary>
     private static nint LoadAppIcon()
     {
         var path = Path.Combine(AppContext.BaseDirectory, "HashIcon.ico");
         if (File.Exists(path))
             return LoadImage(nint.Zero, path, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
 
+        // LR_LOADFROMFILE requires a file path; LoadIcon with NULL hInstance loads a stock system icon.
         return LoadIcon(nint.Zero, IDI_APPLICATION);
     }
 
@@ -154,6 +162,7 @@ public sealed class TrayIconHost : IDisposable
     {
         if (msg == WM_APP_TRAY)
         {
+            // With NOTIFYICON_VERSION_4, the notify event is packed in the low word of lParam
             var notifyMsg = (uint)(lParam & 0xFFFF);
 
             if (notifyMsg == WM_LBUTTONDBLCLK || notifyMsg == WM_LBUTTONUP)
@@ -167,6 +176,9 @@ public sealed class TrayIconHost : IDisposable
         }
         else if (msg == WM_COMMAND)
         {
+            // This branch handles WM_COMMAND posted by other sources (e.g. accelerators).
+            // Context menu items are handled via TPM_RETURNCMD in ShowContextMenu() and will
+            // NOT reach here — do not duplicate handling.
             HandleMenuCommand((int)(wParam & 0xFFFF));
         }
 
