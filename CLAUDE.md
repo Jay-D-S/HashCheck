@@ -53,9 +53,10 @@ Services/         HashSetService, SchedulerService, VolumeAttachedEventArgs
 Tray/             TrayIconHost (P/Invoke shell tray)
 Converters/       WinUI value converters (incl. BoolToOnlineBrushConverter,
                                            InverseBoolToVisibilityConverter)
+Tools/            Developer utilities (Corrupt-Byte.ps1 — bit-rot simulator)
 App.xaml.cs       Application entry — single-instance mutex, tray, scheduler, autoscan prompt
 MainWindow.xaml.cs NavigationView shell, minimize-to-tray on close
-AppServices.cs    Static service locator (Settings, HashSets, Scheduler)
+AppServices.cs    Static service locator (Settings, HashSets, Scheduler, ActiveValidation)
 ```
 
 All functional logic lives under `Core/`. WinUI/tray code only in `Views/`, `ViewModels/`,
@@ -69,7 +70,7 @@ Build requires Visual Studio 2022 or the Windows App SDK workload for the WinUI 
 
 ```powershell
 # Build (x64 debug)
-dotnet build -p:Platform=x64
+dotnet build HashCheck.csproj -p:Platform=x64
 
 # Run via VS — set HashCheck as startup project, target x64
 
@@ -78,6 +79,8 @@ dotnet build -p:Platform=x64
 ```
 
 > `dotnet run` does not work for WinUI 3 MSIX projects. Use Visual Studio to run/debug.
+> When both `.csproj` and `.slnx` are present, always specify the project explicitly:
+> `dotnet build HashCheck.csproj` / `dotnet format HashCheck.csproj`
 
 ---
 
@@ -158,8 +161,9 @@ drive, NAS, and a removable backup). All copies share the same `[FILES]`, `[PATH
 - To add a mirror: `HashSetService.AddVolumeAsync(hashFilePath, serial, label, totalBytes, scanSubPath)`
 - Validation records which volume was scanned via `ValidationEntry.VolumeSerial`
 - The Dashboard shows per-row availability (online/offline) by checking all registered serials
-- The MediaGroupPage manages the group (view volumes, register mirrors, edit scan paths);
-  it does **not** run validation inline — the Validate button navigates to `ValidatePage`
+- The MediaGroupPage manages the group (view volumes, register mirrors, edit scan paths,
+  toggle Autoscan); it does **not** run validation inline — the Validate button navigates
+  to `ValidatePage` for the selected volume only
 
 ### `.hash` file storage — centralised only
 
@@ -188,25 +192,54 @@ based on the `RunValidationsConcurrently` setting in `AppSettings`).
   the loop calls `await pauseToken.WaitIfPausedAsync(ct)` before each file
 - **Cancel** cancels that row's `CancellationTokenSource` only — other rows continue
 - **View Report** navigates to `ReportPage` with the completed `ValidationReport`
-- `ValidateViewModel` receives a `hashFilePath`, finds all online volumes, builds rows,
-  then calls `Task.WhenAll` (concurrent) or a sequential foreach depending on the setting
+- `ValidateViewModel` receives a `ValidateRequest(hashFilePath, restrictToSerial?)`, finds
+  all online volumes (filtered to `restrictToSerial` when set), builds rows, then calls
+  `Task.WhenAll` (concurrent) or a sequential foreach depending on the setting
 - `HashSetService.ValidateAsync` and `ValidationEngine.ValidateAsync` both accept an
   optional `PauseToken?` parameter (default null — existing callers unaffected)
+- `ValidationReport` carries `VolumeSerial` and `ScanRoot` (populated by `HashSetService`
+  after validation) for use in HTML/CSV reports
 
-### Autoscan — mount-triggered with delay prompt
+### Reattachable validation
 
-When a tracked volume comes online (detected by `SchedulerService`'s 30-second volume
-poll), and the hash set has `Autoscan=True`, the app shows a prompt:
+A validation running in the background survives navigation. `AppServices.ActiveValidation`
+holds the live `ValidateViewModel?`. Rules:
 
-> "Media Attached: [label] — when would you like to autoscan?"
-> Scan now / In 5 min / In 30 min / In 1 hr / In 4 hr / In 8 hr / In 24 hr / I'll do it manually
+- `ValidateViewModel.RunValidationsAsync` sets `AppServices.ActiveValidation = this`
+  at start and clears it to `null` when all rows finish.
+- `ValidatePage` constructor checks `AppServices.ActiveValidation` first — if non-null it
+  reuses the existing VM instead of creating a new one.
+- `ValidatePage.OnNavigatedTo` returns early (no restart) when `ActiveValidation != null`.
+- `DashboardPage.OnNavigatedTo` opens an InfoBar banner when `ActiveValidation != null`,
+  with a "Return to validation" button that navigates back to `ValidatePage`.
 
-This prompt can be disabled globally in Settings (`AutoscanPromptOnAttach`). The delay
+### ValidateRequest — navigation parameter
+
+```csharp
+public record ValidateRequest(string HashFilePath, string? RestrictToSerial = null);
+```
+
+Used as the `Frame.Navigate` parameter when the caller knows which hash file to open.
+`ValidatePage.OnNavigatedTo` handles both `string` (bare path, legacy) and `ValidateRequest`.
+`RestrictToSerial` limits validation to one volume — used by MediaGroupPage's Validate button.
+
+### Autoscan — two distinct modes
+
+**Mount-triggered autoscan** (`AutoscanEngine` via `SchedulerService`):
+When a tracked volume comes online (30-second poll) and its hash set has `Autoscan=True`,
+the app shows a delay prompt (Scan now / In 5 min / … / I'll do it manually). The delay
 countdown fires `HashSetService.AutoscanAsync` after the chosen interval, but only if the
-volume is still connected at that time.
+volume is still connected. The scheduler's first volume tick (10 s after start) records the
+baseline — volumes already mounted at startup do NOT fire the attach event.
 
-The scheduler's first volume tick (10 s after start) records the baseline — volumes already
-mounted at startup do NOT fire the attach event.
+**Post-validation autoscan** (inline in `HashSetService.ValidateAsync`):
+After every validation, if `hashFile.Autoscan == true`, `AutoscanEngine.ScanAsync` runs
+automatically to hash and append any files found on the media that are not in the hash set.
+This is how new files accumulate without a full re-create. Toggle via the "Autoscan new
+files" checkbox on MediaGroupPage (calls `HashSetService.SetAutoscanAsync`).
+
+> `DefaultAutoscan` in Settings only affects **newly created** hash sets. To enable
+> autoscan on an existing hash set, use the checkbox on its MediaGroupPage.
 
 ### File writes
 Write to a temp file then atomic-rename to final path. Never leave a partial `.hash` on
@@ -234,6 +267,10 @@ When comparing hashes, use three Not-Matching sub-categories:
 - **Missing** — in the `.hash` file but absent from the media
 Also report: **New** (on media, not in hash file), **Errors** (unreadable/locked).
 
+HTML and CSV exports are built in `ReportViewModel`. The HTML report uses a card-based
+summary (non-zero categories only) plus colour-coded sections. The CSV has a metadata block
+(media, volume serial, scan root, timestamp, per-category counts) above the data rows.
+
 ### Long paths
 Use `\\?\`-prefixed paths throughout to handle paths longer than 260 characters.
 
@@ -254,6 +291,28 @@ Context menu items: **Dashboard**, **Create new hash…**, **Settings**, **About
 directly (not via `WM_COMMAND`) and handled by calling `HandleMenuCommand` on the return
 value. Do not add `WM_COMMAND` handling for menu items.
 
+### Reminder flow
+
+`SchedulerService` fires `RemindersAvailable` once every 24 hours (first tick at 5 s after
+start — delayed to avoid a XamlRoot-null race condition). `App.xaml.cs` handles the event:
+
+- Lists all overdue set names (up to 20). If > 20 overdue, shows a generic count message
+  directing the user to the Dashboard instead.
+- **Validate Now** (1 overdue set): calls `MainWindow.NavigateTo("validate", new ValidateRequest(filePath))`
+  so validation starts immediately without the file picker.
+- **Validate Now** (2+ overdue sets): navigates to the Dashboard.
+- **Snooze 7 days**: not yet implemented (currently a no-op dismiss).
+
+### Dashboard
+
+- Column headers are clickable sort buttons. `DashboardViewModel.SortBy(column)` toggles
+  direction when the same column is clicked again. Sort survives `Refresh`.
+- `DashboardViewModel` maintains a `_allItems` backing list; `ApplySort()` repopulates
+  `Items` (the bound `ObservableCollection`) in sort order.
+- The InfoBar banner (`ActiveValidationBar`) is shown when `AppServices.ActiveValidation != null`.
+- **Open Location** opens the scan root of the first online volume in Explorer; falls back
+  to the folder containing the `.hash` file.
+
 ### Window title / donation nag
 On launch, `App.xaml.cs` calls `BuildWindowTitle()` which produces:
 `HashCheck v1.0.0 — <nag message>` (unless `HideDonationNag` is true, in which case
@@ -272,7 +331,7 @@ Version is read from `Windows.ApplicationModel.Package.Current` (packaged) or
 - `DefaultHashStoragePath` — where new `.hash` files are saved
 - `DefaultReminderDays` — default validation reminder interval
 - `DefaultAlgorithm` — default hash algorithm (XxHash3)
-- `DefaultAutoscan` — default autoscan setting for new hash sets
+- `DefaultAutoscan` — default autoscan flag for **newly created** hash sets only
 - `AutoscanPromptOnAttach` — whether to show autoscan delay prompt on volume attach
 - `RunAtLogin` — whether to register in HKCU Run key
 - `RunValidationsConcurrently` — whether `ValidatePage` runs all volume rows in parallel
@@ -281,10 +340,16 @@ Version is read from `Windows.ApplicationModel.Package.Current` (packaged) or
 - `NagMessageIndex` — which donation nag message to show next (increments each launch, wraps)
 - `HideDonationNag` — set to `true` when the user clicks Donate; suppresses the nag permanently
 
-### Dashboard — Open Location
-The "Open Location" button opens the **scan root** of the first online registered volume
-in Explorer (e.g. `Z:\_PHOTOS\2026`). Falls back to the directory containing the `.hash`
-file if no volume is currently online.
+### MainWindow.NavigateTo
+
+Two overloads:
+```csharp
+public void NavigateTo(string tag)                    // navigates; skips if already on that page
+public void NavigateTo(string tag, object? parameter) // always navigates; passes parameter to OnNavigatedTo
+```
+
+The parameter overload always calls `ContentFrame.Navigate` even if the page is already
+current — necessary so the destination page receives a fresh `NavigationEventArgs.Parameter`.
 
 ---
 
@@ -297,12 +362,19 @@ file if no volume is currently online.
 5. ✅ Create UI — folder tree, details, progress
 6. ✅ Validate UI — multi-volume concurrent rows, Pause/Resume/Cancel per row, View Report
 7. ✅ Reminders + Dashboard — scheduler, reminder popup, dashboard page
-8. ✅ Autoscan — `AutoscanEngine`; mount-trigger + delay prompt wired in `App.xaml.cs`; scan-root-relative paths
+8. ✅ Autoscan — `AutoscanEngine`; mount-trigger + delay prompt; post-validation add-new-files
 9. ✅ Re-create — re-baseline action, backup, fresh log, no-duplicate fix
 10. ✅ Add Mirror UI — `RegisterMirror` button on Dashboard, `EditMirrorRoot` on MediaGroupPage
 11. ⬜ Packaging — finalize MSIX, verify autostart
-    ✅ App icon — `HashIcon.ico` in project root; copied to output dir; loaded in tray
-       (`LoadImage` + `LR_LOADFROMFILE`), window title bar, and taskbar (`AppWindow.SetIcon`)
+    ✅ App icon — `HashIcon.ico` in project root; loaded in tray, title bar, and taskbar
+
+Post-baseline improvements (all shipped):
+- ✅ Reattachable validation — navigate away and return without losing progress
+- ✅ Per-volume validate from MediaGroupPage — validates only the selected volume
+- ✅ Reminder popup lists all overdue sets; Validate Now auto-starts for single overdue set
+- ✅ Dashboard sortable columns — click any header to sort ascending/descending
+- ✅ HTML/CSV report improvements — card summary, volume info, metadata block
+- ✅ Autoscan new files toggle on MediaGroupPage — enables per-set post-validation autoscan
 
 ---
 
