@@ -30,6 +30,11 @@ public sealed partial class MediaGroupPage : Page
         Frame.Navigate(typeof(ValidatePage), new ValidateRequest(ViewModel.HashFilePath, row.SerialNumber));
     }
 
+    private void Repair_Click(object sender, RoutedEventArgs e)
+    {
+        Frame.Navigate(typeof(RepairPage), ViewModel.HashFilePath);
+    }
+
     // Opens a FolderPicker first (no picker-inside-dialog conflict) then confirms.
     private async void EditScanPath_Click(object sender, RoutedEventArgs e)
     {

@@ -93,6 +93,10 @@
                     IsEnabled="{x:Bind ViewModel.CanValidateSelected, Mode=OneWay}"
                     Style="{ThemeResource AccentButtonStyle}"
                     ToolTipService.ToolTip="Validate the selected volume. To validate all volumes in this group, use the Dashboard."/>
+            <Button Content="Repair"
+                    Click="Repair_Click"
+                    IsEnabled="{x:Bind ViewModel.CanRepair, Mode=OneWay}"
+                    ToolTipService.ToolTip="Validates all online drives and repairs corrupted files by copying intact copies from other drives in the group."/>
             <Button Content="Edit Mirror Root"
                     Click="EditScanPath_Click"
                     IsEnabled="{x:Bind ViewModel.HasSelectedRow, Mode=OneWay}"/>

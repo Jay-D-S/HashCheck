@@ -99,6 +99,8 @@ public partial class MediaGroupViewModel : ViewModelBase
 
     public bool HasSelectedRow => SelectedRow != null;
     public bool AnyOnline => Volumes.Any(v => v.IsOnline);
+    /// <summary><c>true</c> when the group has at least two registered volumes and at least one is online. Used to enable the Repair button on MediaGroupPage.</summary>
+    public bool CanRepair => Volumes.Count >= 2 && AnyOnline;
 
     /// <summary><c>true</c> when a row is selected and that volume is currently online (mounted). Used to enable the Validate button on MediaGroupPage.</summary>
     public bool CanValidateSelected => SelectedRow?.IsOnline == true;
@@ -136,5 +138,8 @@ public partial class MediaGroupViewModel : ViewModelBase
                 string.Equals(v.VolumeSerial, vol.SerialNumber, StringComparison.OrdinalIgnoreCase));
             Volumes.Add(new VolumeRow(vol, onlineVol, lastVal, topLevelPaths));
         }
+
+        OnPropertyChanged(nameof(AnyOnline));
+        OnPropertyChanged(nameof(CanRepair));
     }
 }

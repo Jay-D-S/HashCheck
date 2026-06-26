@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using HashCheck.Core;
 using HashCheck.Core.HashFile;
 using HashCheck.Core.Hashing;
@@ -27,6 +28,16 @@ public record CreateOptions(
 public sealed class HashSetService
 {
     private readonly SettingsStore _settings;
+
+    // One semaphore per .hash file path — lets concurrent volume validations run in
+    // parallel (different drives) while serializing the final read-modify-write so
+    // each volume's [VALIDATIONS] entry is preserved and the .tmp file is never
+    // accessed by two writers simultaneously.
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> _writeGates =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private static SemaphoreSlim GetWriteGate(string path) =>
+        _writeGates.GetOrAdd(path, _ => new SemaphoreSlim(1, 1));
 
     public HashSetService(SettingsStore settings)
     {
@@ -141,44 +152,66 @@ public sealed class HashSetService
         CancellationToken ct,
         PauseToken? pauseToken = null)
     {
+        // Read + validate can run concurrently for different volumes of the same group.
         var hashFile = await HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: true);
         var engine = new ValidationEngine();
         var report = await engine.ValidateAsync(hashFile, mediaRoot, progress, ct, pauseToken);
         report.VolumeSerial = volumeSerial;
         report.ScanRoot = mediaRoot;
 
-        // Append validation record — note which copy of the group was validated
-        hashFile.Validations.Add(new ValidationEntry(
-            report.Timestamp,
-            report.Status,
-            volumeSerial,
-            report.TotalFilesFound,
-            report.TotalBytesFound,
-            report.TotalMatching,
-            report.TotalNotMatching,
-            report.TotalMissing,
-            report.TotalErrors));
-
-        // Run autoscan after validation if enabled
+        // Run autoscan before acquiring the write lock (it's read-only against the hash file).
+        AutoscanResult? autoscanResult = null;
         if (hashFile.Autoscan)
         {
             var autoscanEngine = new AutoscanEngine();
-            var autoscanResult = await autoscanEngine.ScanAsync(hashFile, mediaRoot, progress, ct);
+            autoscanResult = await autoscanEngine.ScanAsync(hashFile, mediaRoot, progress, ct);
             report.AutoscanResult = autoscanResult;
-
-            if (autoscanResult.AddedFiles.Count > 0 || autoscanResult.AddedPaths.Count > 0)
-            {
-                hashFile.Files.AddRange(autoscanResult.AddedFiles);
-                foreach (var dir in autoscanResult.AddedPaths)
-                {
-                    if (!hashFile.Paths.Contains(dir, StringComparer.OrdinalIgnoreCase))
-                        hashFile.Paths.Add(dir);
-                }
-                hashFile.DateModified = DateTime.UtcNow;
-            }
         }
 
-        await HashFileWriter.WriteAsync(hashFile, hashFilePath);
+        // Serialize the write step per hash file. When two volumes of the same media group
+        // validate concurrently they race to write the same .hash file (and the same .tmp
+        // path). Re-read inside the lock so neither run's [VALIDATIONS] entry is lost.
+        var gate = GetWriteGate(hashFilePath);
+        await gate.WaitAsync(ct);
+        try
+        {
+            var latest = await HashFileReader.ReadAsync(hashFilePath, verifyIntegrity: false);
+
+            latest.Validations.Add(new ValidationEntry(
+                report.Timestamp,
+                report.Status,
+                volumeSerial,
+                report.TotalFilesFound,
+                report.TotalBytesFound,
+                report.TotalMatching,
+                report.TotalNotMatching,
+                report.TotalMissing,
+                report.TotalErrors));
+
+            if (autoscanResult != null && (autoscanResult.AddedFiles.Count > 0 || autoscanResult.AddedPaths.Count > 0))
+            {
+                var existing = latest.Files
+                    .Select(f => f.RelativePath)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var f in autoscanResult.AddedFiles)
+                    if (existing.Add(f.RelativePath))
+                        latest.Files.Add(f);
+
+                foreach (var dir in autoscanResult.AddedPaths)
+                    if (!latest.Paths.Contains(dir, StringComparer.OrdinalIgnoreCase))
+                        latest.Paths.Add(dir);
+
+                latest.DateModified = DateTime.UtcNow;
+            }
+
+            await HashFileWriter.WriteAsync(latest, hashFilePath);
+        }
+        finally
+        {
+            gate.Release();
+        }
+
         return report;
     }
 
