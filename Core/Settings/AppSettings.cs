@@ -2,6 +2,10 @@ using System.Text.Json.Serialization;
 
 namespace HashCheck.Core.Settings;
 
+[JsonSerializable(typeof(AppSettings))]
+[JsonSourceGenerationOptions(WriteIndented = true)]
+internal sealed partial class AppSettingsContext : JsonSerializerContext { }
+
 /// <summary>Application-wide settings persisted to <c>%APPDATA%\HashCheck\settings.json</c>. JSON-serialized by <see cref="SettingsStore"/>.</summary>
 public class AppSettings
 {

@@ -9,8 +9,6 @@ public sealed class SettingsStore
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "HashCheck", "settings.json");
 
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-
     /// <summary>The currently active settings. Always non-null; falls back to defaults if the file is missing or corrupt.</summary>
     public AppSettings Current { get; private set; } = new();
 
@@ -22,7 +20,7 @@ public sealed class SettingsStore
             if (File.Exists(SettingsPath))
             {
                 var json = File.ReadAllText(SettingsPath);
-                Current = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new();
+                Current = JsonSerializer.Deserialize(json, AppSettingsContext.Default.AppSettings) ?? new();
             }
         }
         catch
@@ -34,7 +32,7 @@ public sealed class SettingsStore
     public void Save()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
-        File.WriteAllText(SettingsPath, JsonSerializer.Serialize(Current, JsonOptions));
+        File.WriteAllText(SettingsPath, JsonSerializer.Serialize(Current, AppSettingsContext.Default.AppSettings));
     }
 
     /// <summary>Adds <paramref name="filePath"/> to <see cref="AppSettings.KnownHashFiles"/> if not already present, then saves.</summary>
