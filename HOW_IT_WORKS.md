@@ -99,10 +99,19 @@ ValidateRowAsync(row)
        │    │         └─ size and mtime unchanged → Corrupted (likely bit-rot)
        │    └─ Files in hash set not found on disk → Missing
        ├─ report.VolumeSerial = serial; report.ScanRoot = mediaRoot
-       ├─ hashFile.Validations.Add(new ValidationEntry(…))
-       ├─ if hashFile.Autoscan → AutoscanEngine.ScanAsync() → hash new files, append
-       └─ HashFileWriter.WriteAsync(hashFile, path)  ← saves validation record + new files
+       ├─ if hashFile.Autoscan → AutoscanEngine.ScanAsync() → hash new files (outside lock)
+       ├─ await _writeGates[hashFilePath].WaitAsync()   ← per-file semaphore
+       │    ├─ HashFileReader.ReadAsync(path, verifyIntegrity: false)  ← fresh re-read
+       │    ├─ latest.Validations.Add(new ValidationEntry(…))
+       │    ├─ merge autoscan results (dedup against re-read file list)
+       │    └─ HashFileWriter.WriteAsync(latest, path)
+       └─ gate.Release()
 ```
+
+The write gate (`_writeGates` — a static `ConcurrentDictionary<string, SemaphoreSlim>` in
+`HashSetService`) prevents two concurrent volume validations from racing to write the same
+`.tmp` file and from overwriting each other's `[VALIDATIONS]` entry. Hashing (the slow
+part) still runs in parallel; only the final read-modify-write is serialised.
 
 The validation result (`ValidationReport`) flows back to `ValidationRow.Report`.
 "View Report" navigates to `ReportPage` which builds HTML or CSV on demand.
@@ -216,10 +225,54 @@ of the same data (primary drive, NAS, USB backup, etc.).
   `ValidationRow` per currently-online volume and runs them all.
 - **Edit scan path:** MediaGroupPage → Edit Mirror Root → type corrected path. Saves via
   `HashSetService.UpdateVolumeScanPathAsync`.
+- **Repair:** MediaGroupPage → Repair (enabled when ≥ 2 volumes registered and ≥ 1 online).
+  See Cross-Drive Repair below.
 
 All copies share `[FILES]`, `[PATHS]`, `[FILTERS]` — the relative paths are identical
 on every copy by definition. `[VALIDATIONS]` records carry `volume=<serial>` so per-copy
 history is distinguishable.
+
+---
+
+## Cross-Drive Repair
+
+Triggered from `MediaGroupPage → Repair`. Navigates to `RepairPage` with the hash file
+path as parameter. `RepairViewModel.RunAsync` drives a two-phase flow:
+
+**Phase 1 — validate all online volumes**
+
+Reuses `ValidationRow` (same card UI as `ValidatePage`) and calls
+`HashSetService.ValidateAsync` for each online volume — meaning `[VALIDATIONS]` entries
+are written to the hash file just as with a normal validation. Runs concurrently or
+sequentially according to `RunValidationsConcurrently`.
+
+**Phase 2 — repair**
+
+```
+RepairEngine.RunAsync(reports, onlineVolumes)
+  ├─ Collect all RelativePaths that are Corrupted on ≥ 1 volume
+  ├─ For each corrupted path:
+  │    ├─ goodSerials   = volumes where file was validated + not corrupted/missing/error
+  │    ├─ corruptedSerials = volumes where file is Corrupted
+  │    ├─ goodSerials empty → Unrecoverable (skip)
+  │    └─ For each corruptedSerial:
+  │         ├─ DriveType == CDRom → ReadOnlySkipped
+  │         ├─ File.Copy(sourcePath, targetPath + ".repair_tmp", overwrite: true)
+  │         ├─ Re-hash .repair_tmp with HasherFactory.Create(hashFile.Algorithm)
+  │         ├─ Hash matches stored FileEntry.Hash
+  │         │    → File.Move(.repair_tmp → targetPath, overwrite: true)  → Repaired
+  │         ├─ Hash mismatch → delete .repair_tmp → VerificationFailed
+  │         ├─ UnauthorizedAccessException / ERROR_WRITE_PROTECT → ReadOnlySkipped
+  │         └─ Any other exception → delete .repair_tmp → Error
+  └─ On cancellation → delete in-progress .repair_tmp, propagate OperationCanceledException
+```
+
+Only `Corrupted` files are repaired (`NotMatchingReason.Corrupted` — hash differs but
+size and mtime are unchanged). `Modified` files are left untouched.
+
+`RepairPage` shows summary cards (Repaired / Unrecoverable / Read-only skipped / Failed)
+and colour-coded detail lists. The "Validate Again" button navigates to `ValidatePage`
+for a confirmation run after repair completes.
 
 ---
 

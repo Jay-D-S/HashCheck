@@ -41,14 +41,15 @@ Core/
   Hashing/        IHasher, HasherFactory, HashAlgorithms
   Scanning/       FileScanner, FilterEngine, ScanProgress, AutoscanEngine
   Validation/     ValidationEngine, ValidationReport, PauseToken
+  Repair/         RepairEngine, RepairReport, RepairResult, RepairProgress
   Volumes/        VolumeIdentity, VolumeLocator
-  Settings/       AppSettings, SettingsStore
+  Settings/       AppSettings, SettingsStore, AppSettingsContext
   Scheduling/     ReminderScheduler
 Views/            WinUI pages (CreateHashPage, ValidatePage, ReportPage,
                                DashboardPage, SettingsPage, ReCreatePage,
-                               MediaGroupPage)
+                               MediaGroupPage, RepairPage)
 ViewModels/       MVVM view models (one per page + ViewModelBase, FolderNode,
-                                    ValidationRow)
+                                    ValidationRow, RepairViewModel)
 Services/         HashSetService, SchedulerService, VolumeAttachedEventArgs
 Tray/             TrayIconHost (P/Invoke shell tray)
 Converters/       WinUI value converters (incl. BoolToOnlineBrushConverter,
@@ -164,6 +165,44 @@ drive, NAS, and a removable backup). All copies share the same `[FILES]`, `[PATH
 - The MediaGroupPage manages the group (view volumes, register mirrors, edit scan paths,
   toggle Autoscan); it does **not** run validation inline — the Validate button navigates
   to `ValidatePage` for the selected volume only
+- The **Repair** button on MediaGroupPage navigates to `RepairPage` (enabled when
+  `Volumes.Count >= 2 && AnyOnline`); see Cross-Drive Repair below
+
+### Cross-Drive Repair
+
+When a media group has multiple physical copies, drives can heal each other — a file
+corrupted on drive A may be intact on drive B. The **Repair** button on `MediaGroupPage`
+navigates to `RepairPage`, which runs a two-phase operation:
+
+**Phase 1 — Validate all online volumes** (via `HashSetService.ValidateAsync`, same path
+as normal validation — writes `[VALIDATIONS]` entries to the hash file).
+
+**Phase 2 — Repair** (`RepairEngine.RunAsync`):
+1. Collects all file paths that are `Corrupted` (bit-rot: hash differs, size/mtime
+   unchanged) on at least one volume across the completed `ValidationReport`s.
+2. For each such path, classifies every validated volume as a **good source** (file
+   present and hash-matched) or a **corrupted target**.
+3. Copies from the first available good source to each corrupted target, writing to
+   `targetPath + ".repair_tmp"` first.
+4. Re-hashes the `.repair_tmp` file and compares against the stored hash to verify the
+   copy. On match: `File.Move` overwrites the corrupted file. On mismatch: deletes the
+   temp file and reports `VerificationFailed`.
+5. Cleans up any `.repair_tmp` files if cancelled mid-run.
+
+**Repair outcomes per file × target volume:**
+- `Repaired` — copy verified and moved into place
+- `Unrecoverable` — file is corrupted on every online drive; no intact source
+- `ReadOnlySkipped` — target drive is optical (`DriveType.CDRom`) or write-protected
+  (`UnauthorizedAccessException` / Win32 error 19)
+- `VerificationFailed` — copy succeeded but re-hash didn't match the stored value
+- `Error` — I/O or other exception during copy
+
+Only `Corrupted` files are repaired. `Modified` files (hash differs AND metadata changed)
+are intentional edits and are left untouched.
+
+`RepairViewModel` reuses `ValidationRow` from `ValidatePage` for the phase-1 display.
+`VolumeLabels` (serial → label map) is populated during `RunAsync` and used by
+`RepairPage` code-behind to format human-readable result strings.
 
 ### `.hash` file storage — centralised only
 
@@ -199,6 +238,11 @@ based on the `RunValidationsConcurrently` setting in `AppSettings`).
   optional `PauseToken?` parameter (default null — existing callers unaffected)
 - `ValidationReport` carries `VolumeSerial` and `ScanRoot` (populated by `HashSetService`
   after validation) for use in HTML/CSV reports
+- **Concurrent write safety:** `HashSetService.ValidateAsync` uses a per-hash-file
+  `SemaphoreSlim` gate (`_writeGates` static dictionary) to serialise the final
+  read-modify-write step. Volume hashing runs in parallel; inside the gate the file is
+  re-read fresh so every volume's `[VALIDATIONS]` entry is preserved and the `.tmp` file
+  is never accessed by two writers simultaneously.
 
 ### Reattachable validation
 
@@ -375,6 +419,8 @@ Post-baseline improvements (all shipped):
 - ✅ Dashboard sortable columns — click any header to sort ascending/descending
 - ✅ HTML/CSV report improvements — card summary, volume info, metadata block
 - ✅ Autoscan new files toggle on MediaGroupPage — enables per-set post-validation autoscan
+- ✅ Cross-drive repair — `RepairPage` validates all volumes then cross-copies corrupted files from intact drives; read-only and unrecoverable cases reported clearly
+- ✅ Concurrent validation write safety — per-file `SemaphoreSlim` gate in `HashSetService.ValidateAsync` prevents `.tmp` file contention and lost `[VALIDATIONS]` entries when multiple volumes validate in parallel
 
 ---
 
