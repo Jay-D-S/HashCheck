@@ -1,3 +1,5 @@
+Just to carify - I've been a software developer for over 15 years.  This project was written with help from AI (Claude)
+
 I built a free portable tool that detects bit-rot by distinguishing corrupted files from legitimately modified ones — HashCheck v1.0.0
 A few years back I watched a photographer lose archived shoots to bit-rot on drives that showed no errors whatsoever. As a keen photographer, It stuck with me.
 Most checksum tools tell you "this file doesn't match" — but they don't tell you *why*. There's a meaningful difference between:
