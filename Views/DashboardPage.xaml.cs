@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using HashCheck.Core.Volumes;
 using HashCheck.ViewModels;
 using Microsoft.UI.Xaml;
@@ -11,6 +12,7 @@ public sealed partial class DashboardPage : Page
 {
     public DashboardViewModel ViewModel { get; }
 
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(DashboardItem))]
     public DashboardPage()
     {
         ViewModel = new DashboardViewModel(AppServices.HashSets);

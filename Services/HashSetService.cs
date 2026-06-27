@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using HashCheck.Core;
 using HashCheck.Core.HashFile;
 using HashCheck.Core.Hashing;
@@ -27,6 +28,10 @@ public record CreateOptions(
 /// <summary>High-level coordinator for all hash-set operations: create, validate, autoscan, re-create, mirror management, and dashboard loading.</summary>
 public sealed class HashSetService
 {
+    [DllImport("kernel32.dll")] private static extern uint SetThreadExecutionState(uint esFlags);
+    private const uint ES_CONTINUOUS      = 0x80000000u;
+    private const uint ES_SYSTEM_REQUIRED = 0x00000001u;
+
     private readonly SettingsStore _settings;
 
     // One semaphore per .hash file path — lets concurrent volume validations run in
@@ -72,6 +77,9 @@ public sealed class HashSetService
 
         var files = new List<FileEntry>(allItems.Count);
 
+        SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED);
+        try
+        {
         foreach (var item in allItems)
         {
             ct.ThrowIfCancellationRequested();
@@ -109,6 +117,11 @@ public sealed class HashSetService
                 item.Info.LastWriteTimeUtc));
 
             filesProcessed++;
+        }
+        }
+        finally
+        {
+            SetThreadExecutionState(ES_CONTINUOUS);
         }
 
         var mediaName = string.IsNullOrWhiteSpace(options.VolumeLabel)

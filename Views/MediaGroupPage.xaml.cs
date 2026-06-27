@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using HashCheck.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,6 +11,7 @@ public sealed partial class MediaGroupPage : Page
 {
     public MediaGroupViewModel ViewModel { get; }
 
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(VolumeRow))]
     public MediaGroupPage()
     {
         ViewModel = new MediaGroupViewModel(AppServices.HashSets);

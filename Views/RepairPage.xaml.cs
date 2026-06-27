@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using HashCheck.Core.Repair;
 using HashCheck.ViewModels;
 using Microsoft.UI.Xaml;
@@ -13,6 +14,7 @@ public sealed partial class RepairPage : Page
 
     private string _hashFilePath = "";
 
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ValidationRow))]
     public RepairPage()
     {
         ViewModel = new RepairViewModel(AppServices.HashSets, AppServices.Settings.Current);

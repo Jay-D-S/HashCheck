@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using HashCheck.Core.Volumes;
 using HashCheck.ViewModels;
 using Microsoft.UI.Xaml;
@@ -13,6 +14,7 @@ public sealed partial class ValidatePage : Page
 {
     public ValidateViewModel ViewModel { get; }
 
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ValidationRow))]
     public ValidatePage()
     {
         // Reuse an in-progress validation if one exists so the user can navigate away and return.
