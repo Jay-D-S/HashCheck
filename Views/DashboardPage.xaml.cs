@@ -197,7 +197,10 @@ public sealed partial class DashboardPage : Page
         {
             await AppServices.HashSets.AddVolumeAsync(
                 item.FilePath, volId.SerialNumber, volId.Label, volId.TotalBytes, scanSubPath);
-            await ViewModel.LoadAsync();
+            // Navigate to the verification page so the new mirror is immediately validated
+            // and any corruption is detected before the user relies on it.
+            Frame.Navigate(typeof(MirrorVerificationPage),
+                new MirrorVerificationRequest(item.FilePath, volId.SerialNumber));
         }
         catch (Exception ex)
         {
