@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using HashCheck.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -11,6 +12,11 @@ public sealed partial class CreateHashPage : Page
 {
     public CreateHashViewModel ViewModel { get; }
 
+    // The TreeView DataTemplate uses reflection-based {Binding Content.Name} and
+    // {Binding Content.IsChecked} to reach FolderNode properties through TreeViewNode.Content.
+    // This attribute tells the trimmer to preserve all public properties on FolderNode
+    // so those bindings resolve correctly in trimmed/self-contained publish outputs.
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties, typeof(FolderNode))]
     public CreateHashPage()
     {
         ViewModel = new CreateHashViewModel(AppServices.HashSets, AppServices.Settings.Current);
