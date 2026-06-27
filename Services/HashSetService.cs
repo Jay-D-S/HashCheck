@@ -55,9 +55,14 @@ public sealed class HashSetService
         var scanner = new FileScanner(filter);
         var hasher = HasherFactory.Create(options.Algorithm);
 
-        // First pass: count files/bytes for progress
-        var allItems = scanner.Scan(options.MediaRoot, options.ScopePaths, ct).ToList();
-        var allDirs = scanner.GetAllDirectories(options.MediaRoot, options.ScopePaths, ct).ToList();
+        // First pass: enumerate all files/dirs for progress totals.
+        // Runs on a background thread so the UI stays responsive during the scan.
+        var (allItems, allDirs) = await Task.Run(() =>
+        {
+            var items = scanner.Scan(options.MediaRoot, options.ScopePaths, ct).ToList();
+            var dirs  = scanner.GetAllDirectories(options.MediaRoot, options.ScopePaths, ct).ToList();
+            return (items, dirs);
+        }, ct);
 
         int filesTotal = allItems.Count;
         long bytesTotal = allItems.Sum(i => i.Info.Length);

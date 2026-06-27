@@ -112,23 +112,31 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Text="Hashing files..." FontSize="18" Margin="0,0,0,16"/>
+            <TextBlock Grid.Row="0" Text="{x:Bind ViewModel.ProgressPhaseTitle, Mode=OneWay}" FontSize="18" Margin="0,0,0,16"/>
 
-            <ProgressBar Grid.Row="1"
+            <!-- Scanning phase: indeterminate spinner while directory tree is being read -->
+            <StackPanel Grid.Row="1" Visibility="{x:Bind ViewModel.IsScanning, Mode=OneWay}"
+                        Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
+                <ProgressRing IsActive="True" Width="28" Height="28"/>
+                <TextBlock Text="Reading directory structure, please wait…" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Hashing phase: determinate progress bars -->
+            <ProgressBar Grid.Row="1" Visibility="{x:Bind ViewModel.IsHashingFiles, Mode=OneWay}"
                          Value="{x:Bind ViewModel.FilesProcessed, Mode=OneWay}"
                          Maximum="{x:Bind ViewModel.FilesTotal, Mode=OneWay}"
                          Margin="0,0,0,8"/>
 
-            <TextBlock Grid.Row="2"
+            <TextBlock Grid.Row="2" Visibility="{x:Bind ViewModel.IsHashingFiles, Mode=OneWay}"
                        Text="{x:Bind ViewModel.ProgressFilesText, Mode=OneWay}"
                        Margin="0,0,0,4"/>
 
-            <ProgressBar Grid.Row="3"
+            <ProgressBar Grid.Row="3" Visibility="{x:Bind ViewModel.IsHashingFiles, Mode=OneWay}"
                          Value="{x:Bind ViewModel.BytesProcessedD, Mode=OneWay}"
                          Maximum="{x:Bind ViewModel.BytesTotalD, Mode=OneWay}"
                          Margin="0,0,0,8"/>
 
-            <TextBlock Grid.Row="4"
+            <TextBlock Grid.Row="4" Visibility="{x:Bind ViewModel.IsHashingFiles, Mode=OneWay}"
                        Text="{x:Bind ViewModel.ProgressBytesText, Mode=OneWay}"
                        Margin="0,0,0,4"/>
 

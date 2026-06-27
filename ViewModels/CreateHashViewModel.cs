@@ -35,6 +35,9 @@ public partial class CreateHashViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsConfigureStep));
                 OnPropertyChanged(nameof(IsProgressStep));
                 OnPropertyChanged(nameof(IsDoneStep));
+                OnPropertyChanged(nameof(IsScanning));
+                OnPropertyChanged(nameof(IsHashingFiles));
+                OnPropertyChanged(nameof(ProgressPhaseTitle));
             }
         }
     }
@@ -64,7 +67,13 @@ public partial class CreateHashViewModel : ViewModelBase
     [ObservableProperty] private string _currentFile = "";
 
     partial void OnFilesProcessedChanged(int value) => OnPropertyChanged(nameof(ProgressFilesText));
-    partial void OnFilesTotalChanged(int value) => OnPropertyChanged(nameof(ProgressFilesText));
+    partial void OnFilesTotalChanged(int value)
+    {
+        OnPropertyChanged(nameof(ProgressFilesText));
+        OnPropertyChanged(nameof(IsScanning));
+        OnPropertyChanged(nameof(IsHashingFiles));
+        OnPropertyChanged(nameof(ProgressPhaseTitle));
+    }
     partial void OnBytesProcessedChanged(long value)
     {
         OnPropertyChanged(nameof(ProgressBytesText));
@@ -103,6 +112,11 @@ public partial class CreateHashViewModel : ViewModelBase
     public bool IsConfigureStep => CurrentStep == CreateStep.Configure;
     public bool IsProgressStep => CurrentStep == CreateStep.Progress;
     public bool IsDoneStep => CurrentStep == CreateStep.Done;
+
+    // Scanning = in progress step but scan hasn't completed yet (FilesTotal still 0)
+    public bool IsScanning => CurrentStep == CreateStep.Progress && FilesTotal == 0;
+    public bool IsHashingFiles => CurrentStep == CreateStep.Progress && FilesTotal > 0;
+    public string ProgressPhaseTitle => IsScanning ? "Scanning files…" : "Hashing files…";
 
     // FilterMode inverse for XAML
     public bool FilterModeInclude
