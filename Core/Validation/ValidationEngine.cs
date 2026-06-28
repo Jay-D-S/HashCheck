@@ -45,7 +45,8 @@ public sealed class ValidationEngine
         // subdirectory twice (it already recurses into children).
         var scopePaths = GetTopLevelPaths(hashFile.Paths);
 
-        var allItems = scanner.Scan(mediaRoot, scopePaths, ct).ToList();
+        // Enumerate files on the thread pool so the UI stays responsive during directory scanning.
+        var allItems = await Task.Run(() => scanner.Scan(mediaRoot, scopePaths, ct).ToList(), ct);
         filesTotal = allItems.Count;
         bytesTotal = allItems.Sum(i => i.Info.Length);
         report.TotalFilesFound = allItems.Count;

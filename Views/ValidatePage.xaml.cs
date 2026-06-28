@@ -20,6 +20,12 @@ public sealed partial class ValidatePage : Page
         // Reuse an in-progress validation if one exists so the user can navigate away and return.
         ViewModel = AppServices.ActiveValidation ?? new ValidateViewModel(AppServices.HashSets, AppServices.Settings.Current);
         InitializeComponent();
+        ViewModel.Rows.CollectionChanged += (_, _) =>
+        {
+            RowsPanel.Items.Clear();
+            foreach (var row in ViewModel.Rows)
+                RowsPanel.Items.Add(row);
+        };
         LoadDriveList();
     }
 
@@ -44,15 +50,21 @@ public sealed partial class ValidatePage : Page
 
     private async void BrowseHash_Click(object sender, RoutedEventArgs e)
     {
-        var picker = new FileOpenPicker();
-        picker.FileTypeFilter.Add(".hash");
-        InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
-        var file = await picker.PickSingleFileAsync();
-        if (file != null)
+        var btn = (Button)sender;
+        btn.IsEnabled = false;
+        try
         {
-            HashFilePathBox.Text = file.Path;
-            ViewModel.HashFilePath = file.Path;
+            var picker = new FileOpenPicker();
+            picker.FileTypeFilter.Add(".hash");
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
+            var file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                HashFilePathBox.Text = file.Path;
+                ViewModel.HashFilePath = file.Path;
+            }
         }
+        finally { btn.IsEnabled = true; }
     }
 
     private async void StartValidate_Click(object sender, RoutedEventArgs e)

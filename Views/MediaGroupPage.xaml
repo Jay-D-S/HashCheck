@@ -54,7 +54,7 @@
         <!-- Volume rows -->
         <ListView
             Grid.Row="3"
-            ItemsSource="{x:Bind ViewModel.Volumes}"
+            x:Name="VolumesList"
             SelectedItem="{x:Bind ViewModel.SelectedRow, Mode=TwoWay}"
             SelectionMode="Single">
             <ListView.ItemContainerStyle>

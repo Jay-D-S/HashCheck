@@ -21,8 +21,27 @@ public sealed partial class CreateHashPage : Page
     {
         ViewModel = new CreateHashViewModel(AppServices.HashSets, AppServices.Settings.Current);
         InitializeComponent();
+        foreach (var name in ViewModel.AlgorithmNames)
+            AlgorithmBox.Items.Add(name);
+        AlgorithmBox.SelectedIndex = ViewModel.AlgorithmIndex;
+        StoragePathBox.Text = ViewModel.StoragePath;
         LoadDrivesIntoTree();
     }
+
+    private void AlgorithmBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (AlgorithmBox.SelectedIndex >= 0)
+            ViewModel.AlgorithmIndex = AlgorithmBox.SelectedIndex;
+    }
+
+    private void ReminderDaysBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (!double.IsNaN(args.NewValue))
+            ViewModel.ReminderDays = (int)args.NewValue;
+    }
+
+    private void StoragePathBox_TextChanged(object sender, TextChangedEventArgs e)
+        => ViewModel.StoragePath = StoragePathBox.Text;
 
     private void LoadDrivesIntoTree()
     {
@@ -81,12 +100,21 @@ public sealed partial class CreateHashPage : Page
 
     private async void BrowseStorage_Click(object sender, RoutedEventArgs e)
     {
-        var picker = new FolderPicker();
-        picker.FileTypeFilter.Add("*");
-        InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
-        var folder = await picker.PickSingleFolderAsync();
-        if (folder != null)
-            ViewModel.StoragePath = folder.Path;
+        var btn = (Button)sender;
+        btn.IsEnabled = false;
+        try
+        {
+            var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.ComputerFolder };
+            picker.FileTypeFilter.Add("*");
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
+            var folder = await picker.PickSingleFolderAsync();
+            if (folder != null && !string.IsNullOrEmpty(folder.Path))
+            {
+                ViewModel.StoragePath = folder.Path;
+                StoragePathBox.Text = folder.Path;
+            }
+        }
+        finally { btn.IsEnabled = true; }
     }
 
     private async void StartHashing_Click(object sender, RoutedEventArgs e)

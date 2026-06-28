@@ -44,7 +44,7 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           Visibility="{x:Bind ViewModel.IsValidating, Mode=OneWay,
                                        Converter={StaticResource BoolToVisibility}}">
-                <ItemsControl ItemsSource="{x:Bind ViewModel.ValidationRows}">
+                <ItemsControl x:Name="ValidationRowsPanel">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:ValidationRow">
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"

@@ -76,7 +76,7 @@
                        Margin="0,0,0,12"/>
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{x:Bind ViewModel.Rows}">
+                <ItemsControl x:Name="RowsPanel">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:ValidationRow">
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"

@@ -51,13 +51,13 @@
                          Text="{x:Bind ViewModel.Description, Mode=TwoWay}"
                          PlaceholderText="e.g. Wedding photos master archive"/>
 
-                <ComboBox Header="Hash Algorithm"
-                          ItemsSource="{x:Bind ViewModel.AlgorithmNames}"
-                          SelectedIndex="{x:Bind ViewModel.AlgorithmIndex, Mode=TwoWay}"/>
+                <ComboBox x:Name="AlgorithmBox" Header="Hash Algorithm"
+                          SelectionChanged="AlgorithmBox_SelectionChanged"/>
 
-                <NumberBox Header="Reminder Interval (days)"
+                <NumberBox x:Name="ReminderDaysBox" Header="Reminder Interval (days)"
                            Value="{x:Bind ViewModel.ReminderDays, Mode=TwoWay}"
-                           Minimum="1" Maximum="3650" SpinButtonPlacementMode="Inline"/>
+                           Minimum="1" Maximum="3650" SpinButtonPlacementMode="Inline"
+                           ValueChanged="ReminderDaysBox_ValueChanged"/>
 
                 <StackPanel>
                     <TextBlock Text="Filter Mode" Margin="0,0,0,4"/>
@@ -81,9 +81,9 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Header="Save .hash file to"
-                             Text="{x:Bind ViewModel.StoragePath, Mode=TwoWay}"
-                             PlaceholderText="Select a folder..."/>
+                    <TextBox x:Name="StoragePathBox" Grid.Column="0" Header="Save .hash file to"
+                             PlaceholderText="Select a folder..."
+                             TextChanged="StoragePathBox_TextChanged"/>
                     <Button Grid.Column="1" Content="Browse" VerticalAlignment="Bottom"
                             Margin="8,0,0,0" Click="BrowseStorage_Click"/>
                 </Grid>

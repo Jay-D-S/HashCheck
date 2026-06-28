@@ -19,6 +19,12 @@ public sealed partial class RepairPage : Page
     {
         ViewModel = new RepairViewModel(AppServices.HashSets, AppServices.Settings.Current);
         InitializeComponent();
+        ViewModel.ValidationRows.CollectionChanged += (_, _) =>
+        {
+            ValidationRowsPanel.Items.Clear();
+            foreach (var row in ViewModel.ValidationRows)
+                ValidationRowsPanel.Items.Add(row);
+        };
         ViewModel.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(ViewModel.Phase))

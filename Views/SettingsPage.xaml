@@ -18,22 +18,23 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" Header="Default .hash storage folder"
-                         Text="{x:Bind ViewModel.DefaultHashStoragePath, Mode=TwoWay}"
-                         PlaceholderText="Select a folder..."/>
+                <TextBox x:Name="StoragePathBox" Grid.Column="0" Header="Default .hash storage folder"
+                         PlaceholderText="Select a folder..."
+                         TextChanged="StoragePathBox_TextChanged"/>
                 <Button Grid.Column="1" Content="Browse" VerticalAlignment="Bottom"
                         Margin="8,0,0,0" Click="BrowseStorage_Click"/>
             </Grid>
 
             <!-- Reminder days -->
-            <NumberBox Header="Default reminder interval (days)"
+            <NumberBox x:Name="ReminderDaysBox"
+                       Header="Default reminder interval (days)"
                        Value="{x:Bind ViewModel.DefaultReminderDays, Mode=TwoWay}"
-                       Minimum="1" Maximum="3650" SpinButtonPlacementMode="Inline"/>
+                       Minimum="1" Maximum="3650" SpinButtonPlacementMode="Inline"
+                       ValueChanged="ReminderDaysBox_ValueChanged"/>
 
             <!-- Algorithm -->
-            <ComboBox Header="Default hash algorithm"
-                      ItemsSource="{x:Bind ViewModel.AlgorithmNames}"
-                      SelectedIndex="{x:Bind ViewModel.DefaultAlgorithmIndex, Mode=TwoWay}"/>
+            <ComboBox x:Name="AlgorithmBox" Header="Default hash algorithm"
+                      SelectionChanged="AlgorithmBox_SelectionChanged"/>
 
             <!-- Autoscan -->
             <ToggleSwitch Header="Autoscan new files after validation (default)"
@@ -58,9 +59,11 @@
 
             <!-- Known locations -->
             <StackPanel Spacing="8">
-                <TextBlock Text="Known .hash file locations to scan" FontWeight="SemiBold"/>
+                <TextBlock Text="Additional .hash file locations to scan" FontWeight="SemiBold"/>
+                <TextBlock Text="The default storage folder above is always scanned automatically. Only add extra folders here."
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           FontSize="12" TextWrapping="Wrap"/>
                 <ListView x:Name="LocationsList"
-                          ItemsSource="{x:Bind ViewModel.KnownHashLocations}"
                           SelectionMode="Single"
                           MaxHeight="150">
                     <ListView.ItemTemplate>

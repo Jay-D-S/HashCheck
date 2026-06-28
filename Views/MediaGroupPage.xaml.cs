@@ -16,6 +16,12 @@ public sealed partial class MediaGroupPage : Page
     {
         ViewModel = new MediaGroupViewModel(AppServices.HashSets);
         InitializeComponent();
+        ViewModel.Volumes.CollectionChanged += (_, _) =>
+        {
+            VolumesList.Items.Clear();
+            foreach (var vol in ViewModel.Volumes)
+                VolumesList.Items.Add(vol);
+        };
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -43,10 +49,10 @@ public sealed partial class MediaGroupPage : Page
         var row = ViewModel.SelectedRow;
         if (row == null) return;
 
-        var folderPicker = new Windows.Storage.Pickers.FolderPicker();
+        var folderPicker = new Windows.Storage.Pickers.FolderPicker
+            { SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.ComputerFolder };
         WinRT.Interop.InitializeWithWindow.Initialize(
             folderPicker, WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow));
-        folderPicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.ComputerFolder;
         folderPicker.FileTypeFilter.Add("*");
 
         Windows.Storage.StorageFolder? picked;
@@ -56,7 +62,7 @@ public sealed partial class MediaGroupPage : Page
             await ShowErrorAsync("Browse Error", ex.Message);
             return;
         }
-        if (picked == null) return;
+        if (picked == null || string.IsNullOrEmpty(picked.Path)) return;
 
         var fullPath = picked.Path;
         var driveRoot = Path.GetPathRoot(fullPath) ?? @"\";

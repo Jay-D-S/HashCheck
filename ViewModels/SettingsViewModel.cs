@@ -42,31 +42,40 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     public void Save()
     {
-        var s = _store.Current;
-        s.DefaultHashStoragePath = DefaultHashStoragePath;
-        s.DefaultReminderDays = DefaultReminderDays;
-        s.DefaultAlgorithm = HasherFactory.FromDisplayIndex(DefaultAlgorithmIndex);
-        s.DefaultAutoscan = DefaultAutoscan;
-        s.AutoscanPromptOnAttach = AutoscanPromptOnAttach;
-        s.RunAtLogin = RunAtLogin;
-        s.RunValidationsConcurrently = RunValidationsConcurrently;
-        s.KnownHashLocations = KnownHashLocations.ToList();
+        try
+        {
+            var s = _store.Current;
+            s.DefaultHashStoragePath = DefaultHashStoragePath;
+            s.DefaultReminderDays = DefaultReminderDays;
+            s.DefaultAlgorithm = HasherFactory.FromDisplayIndex(DefaultAlgorithmIndex);
+            s.DefaultAutoscan = DefaultAutoscan;
+            s.AutoscanPromptOnAttach = AutoscanPromptOnAttach;
+            s.RunAtLogin = RunAtLogin;
+            s.RunValidationsConcurrently = RunValidationsConcurrently;
+            s.KnownHashLocations = KnownHashLocations.ToList();
 
-        _store.Save();
-        ApplyRunAtLogin(RunAtLogin);
-        SaveStatus = "Settings saved.";
+            _store.Save();
+            ApplyRunAtLogin(RunAtLogin);
+            SaveStatus = "Settings saved.";
+        }
+        catch (Exception ex)
+        {
+            SaveStatus = $"Error: {ex.Message}";
+        }
     }
 
     [RelayCommand]
     public void AddKnownLocation(string path)
     {
-        if (!string.IsNullOrWhiteSpace(path) && !KnownHashLocations.Contains(path))
-        {
-            KnownHashLocations.Add(path);
-            // Update backing store immediately so Refresh can find hash files in new locations
-            _store.Current.KnownHashLocations = KnownHashLocations.ToList();
-            _store.Save();
-        }
+        if (string.IsNullOrWhiteSpace(path)) return;
+        // DefaultHashStoragePath is already scanned automatically — adding it here would show it twice.
+        if (string.Equals(path, DefaultHashStoragePath, StringComparison.OrdinalIgnoreCase)) return;
+        if (KnownHashLocations.Contains(path, StringComparer.OrdinalIgnoreCase)) return;
+
+        KnownHashLocations.Add(path);
+        // Update backing store immediately so Refresh can find hash files in new locations
+        _store.Current.KnownHashLocations = KnownHashLocations.ToList();
+        _store.Save();
     }
 
     [RelayCommand]

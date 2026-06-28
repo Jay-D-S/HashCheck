@@ -17,6 +17,12 @@ public sealed partial class DashboardPage : Page
     {
         ViewModel = new DashboardViewModel(AppServices.HashSets);
         InitializeComponent();
+        ViewModel.Items.CollectionChanged += (_, _) =>
+        {
+            ItemsList.Items.Clear();
+            foreach (var item in ViewModel.Items)
+                ItemsList.Items.Add(item);
+        };
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -111,11 +117,10 @@ public sealed partial class DashboardPage : Page
 
         // FolderPicker must be shown BEFORE ContentDialog — WinUI does not support showing a
         // picker from within an open dialog (results in an E_FAIL COM exception on some builds).
-        // Step 1: folder picker — opened before any ContentDialog to avoid WinUI picker conflict
-        var folderPicker = new Windows.Storage.Pickers.FolderPicker();
+        var folderPicker = new Windows.Storage.Pickers.FolderPicker
+            { SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.ComputerFolder };
         WinRT.Interop.InitializeWithWindow.Initialize(
             folderPicker, WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow));
-        folderPicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.ComputerFolder;
         folderPicker.FileTypeFilter.Add("*");
 
         Windows.Storage.StorageFolder? picked;
@@ -125,7 +130,7 @@ public sealed partial class DashboardPage : Page
             await ShowSimpleDialogAsync("Browse Error", ex.Message);
             return;
         }
-        if (picked == null) return;
+        if (picked == null || string.IsNullOrEmpty(picked.Path)) return;
 
         var fullPath = picked.Path;
         var driveRoot = Path.GetPathRoot(fullPath);

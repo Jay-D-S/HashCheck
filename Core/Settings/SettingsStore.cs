@@ -5,7 +5,7 @@ namespace HashCheck.Core.Settings;
 /// <summary>Loads, saves, and manages the live <see cref="AppSettings"/> instance backed by <c>%APPDATA%\HashCheck\settings.json</c>.</summary>
 public sealed class SettingsStore
 {
-    private static readonly string SettingsPath =
+    public static readonly string SettingsPath =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "HashCheck", "settings.json");
 
